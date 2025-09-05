@@ -2,16 +2,19 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Download, FileText, Eye, EyeOff } from 'lucide-react';
+import { Download, FileText, Eye, EyeOff, Palette } from 'lucide-react';
 import { InvoiceForm } from '@/components/InvoiceForm';
 import { InvoicePreview } from '@/components/InvoicePreview';
+import { TemplateSelector } from '@/components/TemplateSelector';
 import { InvoiceData, currencies } from '@/types/invoice';
+import { InvoiceTemplate } from '@/types/templates';
 import { generatePDF } from '@/utils/pdfGenerator';
 import { toast } from '@/hooks/use-toast';
 
 const Index = () => {
   const [showPreview, setShowPreview] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<InvoiceTemplate>(InvoiceTemplate.MODERN);
   const invoicePreviewRef = useRef<HTMLDivElement>(null);
 
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
@@ -182,6 +185,22 @@ const Index = () => {
               invoiceData={invoiceData}
               onUpdateInvoiceData={handleUpdateInvoiceData}
             />
+            
+            {/* Template Selector */}
+            <Card className="shadow-soft">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <Palette className="h-5 w-5 text-primary" />
+                  Template Selection
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TemplateSelector
+                  selectedTemplate={selectedTemplate}
+                  onSelectTemplate={setSelectedTemplate}
+                />
+              </CardContent>
+            </Card>
           </div>
 
           {/* Preview Section */}
@@ -203,7 +222,11 @@ const Index = () => {
             </div>
 
             <div className="sticky top-6">
-              <InvoicePreview ref={invoicePreviewRef} invoiceData={invoiceData} />
+              <InvoicePreview 
+                ref={invoicePreviewRef} 
+                invoiceData={invoiceData} 
+                template={selectedTemplate}
+              />
             </div>
           </div>
         </div>
