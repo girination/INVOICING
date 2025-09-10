@@ -1,43 +1,47 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Download, FileText, Eye, EyeOff, Palette } from 'lucide-react';
-import { InvoiceForm } from '@/components/InvoiceForm';
-import { InvoicePreview } from '@/components/InvoicePreview';
-import { TemplateSelector } from '@/components/TemplateSelector';
-import { InvoiceData, currencies } from '@/types/invoice';
-import { InvoiceTemplate } from '@/types/templates';
-import { generatePDF } from '@/utils/pdfGenerator';
-import { toast } from '@/hooks/use-toast';
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Download, FileText, Eye, EyeOff, Palette } from "lucide-react";
+import { InvoiceForm } from "@/components/InvoiceForm";
+import { InvoicePreview } from "@/components/InvoicePreview";
+import { TemplateSelector } from "@/components/TemplateSelector";
+import { InvoiceData, currencies } from "@/types/invoice";
+import { InvoiceTemplate } from "@/types/templates";
+import { generatePDF } from "@/utils/pdfGenerator";
+import { toast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [showPreview, setShowPreview] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<InvoiceTemplate>(InvoiceTemplate.MODERN);
+  const [selectedTemplate, setSelectedTemplate] = useState<InvoiceTemplate>(
+    InvoiceTemplate.MODERN
+  );
   const invoicePreviewRef = useRef<HTMLDivElement>(null);
 
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
-    invoiceNumber: 'INV-001',
-    date: new Date().toISOString().split('T')[0],
-    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
-    currency: 'USD',
+    invoiceNumber: "INV-001",
+    date: new Date().toISOString().split("T")[0],
+    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0], // 30 days from now
+    currency: "USD",
     businessInfo: {
-      name: '',
-      email: '',
-      phone: '',
-      address: '',
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
       logo: null,
     },
     clientInfo: {
-      name: '',
-      email: '',
-      address: '',
+      name: "",
+      email: "",
+      address: "",
     },
     lineItems: [],
     taxRate: 0,
     discountRate: 0,
-    notes: 'Thank you for your business!',
+    notes: "Thank you for your business!",
     subtotal: 0,
     taxAmount: 0,
     discountAmount: 0,
@@ -61,10 +65,13 @@ const Index = () => {
     };
   }, []);
 
-  const handleUpdateInvoiceData = useCallback((newData: InvoiceData) => {
-    const dataWithTotals = calculateTotals(newData);
-    setInvoiceData(dataWithTotals);
-  }, [calculateTotals]);
+  const handleUpdateInvoiceData = useCallback(
+    (newData: InvoiceData) => {
+      const dataWithTotals = calculateTotals(newData);
+      setInvoiceData(dataWithTotals);
+    },
+    [calculateTotals]
+  );
 
   // Recalculate totals when relevant data changes
   useEffect(() => {
@@ -72,7 +79,12 @@ const Index = () => {
     if (dataWithTotals.total !== invoiceData.total) {
       setInvoiceData(dataWithTotals);
     }
-  }, [invoiceData.lineItems, invoiceData.taxRate, invoiceData.discountRate, calculateTotals]);
+  }, [
+    invoiceData.lineItems,
+    invoiceData.taxRate,
+    invoiceData.discountRate,
+    calculateTotals,
+  ]);
 
   const handleGeneratePDF = async () => {
     if (!invoicePreviewRef.current) {
@@ -87,7 +99,8 @@ const Index = () => {
     if (!invoiceData.businessInfo.name || !invoiceData.clientInfo.name) {
       toast({
         title: "Missing Information",
-        description: "Please fill in both business and client names before generating PDF.",
+        description:
+          "Please fill in both business and client names before generating PDF.",
         variant: "destructive",
       });
       return;
@@ -101,7 +114,7 @@ const Index = () => {
         description: "Invoice PDF has been generated and downloaded.",
       });
     } catch (error) {
-      console.error('PDF generation error:', error);
+      console.error("PDF generation error:", error);
       toast({
         title: "Error",
         description: "Failed to generate PDF. Please try again.",
@@ -112,7 +125,9 @@ const Index = () => {
     }
   };
 
-  const selectedCurrency = currencies.find(c => c.code === invoiceData.currency);
+  const selectedCurrency = currencies.find(
+    (c) => c.code === invoiceData.currency
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -128,7 +143,7 @@ const Index = () => {
                 Create professional invoices in minutes
               </p>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <Button
                 variant="outline"
@@ -148,7 +163,7 @@ const Index = () => {
                   </>
                 )}
               </Button>
-              
+
               <Button
                 onClick={handleGeneratePDF}
                 disabled={isGenerating}
@@ -180,12 +195,12 @@ const Index = () => {
               <FileText className="h-6 w-6 text-primary" />
               <h2 className="text-2xl font-semibold">Invoice Details</h2>
             </div>
-            
-            <InvoiceForm 
+
+            <InvoiceForm
               invoiceData={invoiceData}
               onUpdateInvoiceData={handleUpdateInvoiceData}
             />
-            
+
             {/* Template Selector */}
             <Card className="shadow-soft">
               <CardHeader>
@@ -204,27 +219,28 @@ const Index = () => {
           </div>
 
           {/* Preview Section */}
-          <div className={`space-y-6 ${!showPreview ? 'hidden xl:block' : ''}`}>
+          <div className={`space-y-6 ${!showPreview ? "hidden xl:block" : ""}`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Eye className="h-6 w-6 text-primary" />
                 <h2 className="text-2xl font-semibold">Live Preview</h2>
               </div>
-              
+
               {invoiceData.total > 0 && (
                 <div className="text-right">
                   <p className="text-sm text-muted-foreground">Total Amount</p>
                   <p className="text-2xl font-bold text-primary">
-                    {selectedCurrency?.symbol}{invoiceData.total.toFixed(2)}
+                    {selectedCurrency?.symbol}
+                    {invoiceData.total.toFixed(2)}
                   </p>
                 </div>
               )}
             </div>
 
             <div className="sticky top-6">
-              <InvoicePreview 
-                ref={invoicePreviewRef} 
-                invoiceData={invoiceData} 
+              <InvoicePreview
+                ref={invoicePreviewRef}
+                invoiceData={invoiceData}
                 template={selectedTemplate}
               />
             </div>
@@ -236,7 +252,9 @@ const Index = () => {
       <footer className="border-t bg-card mt-16">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center text-sm text-muted-foreground">
-            <p>Professional Invoice Generator • Built with React & TypeScript</p>
+            <p>
+              Professional Invoice Generator • Built with React & TypeScript
+            </p>
           </div>
         </div>
       </footer>
