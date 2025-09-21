@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Trash2, Upload } from 'lucide-react';
+import { Plus, Trash2, Upload, Sparkles } from 'lucide-react';
 import { InvoiceData, LineItem, currencies } from '@/types/invoice';
 import { toast } from '@/hooks/use-toast';
 
@@ -20,6 +20,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   onUpdateInvoiceData,
 }) => {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [aiPrompt, setAiPrompt] = useState('');
 
   const handleLogoUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -92,8 +93,55 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
 
   const selectedCurrency = currencies.find(c => c.code === invoiceData.currency);
 
+  const handleAIGenerate = () => {
+    toast({
+      title: "Coming Soon!",
+      description: "AI invoice generation will be available once you connect to Supabase.",
+      variant: "default",
+    });
+  };
+
   return (
     <div className="space-y-6">
+      {/* AI Invoice Generator */}
+      <Card className="shadow-soft border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold flex items-center gap-3">
+            <Sparkles className="h-5 w-5 text-primary" />
+            AI Invoice Generator
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="aiPrompt">Describe your invoice</Label>
+            <Textarea
+              id="aiPrompt"
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              placeholder="Example: Create an invoice for web design services. Client is Acme Corp, 3 pages at $500 each, 10% tax, due in 30 days..."
+              className="min-h-[100px]"
+            />
+          </div>
+          <Button 
+            onClick={handleAIGenerate}
+            disabled={!aiPrompt.trim()}
+            className="w-full bg-primary-gradient hover:opacity-90 transition-opacity"
+          >
+            <Sparkles className="h-4 w-4 mr-2" />
+            Generate Invoice with AI
+          </Button>
+          <div className="text-xs text-muted-foreground">
+            <p className="font-medium mb-1">💡 Tips for better results:</p>
+            <ul className="space-y-1 ml-4">
+              <li>• Mention client name and your business details</li>
+              <li>• Describe services/products with quantities and rates</li>
+              <li>• Include tax rates, discounts, and payment terms</li>
+              <li>• Specify currency if not USD</li>
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Business Information */}
       <Card className="shadow-soft">
         <CardHeader>
