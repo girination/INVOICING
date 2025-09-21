@@ -2,7 +2,14 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { DashboardLayout } from "./components/layouts/DashboardLayout";
+import Dashboard from "./pages/Dashboard";
+import CreateInvoice from "./pages/CreateInvoice";
+import Invoices from "./pages/Invoices";
+import Clients from "./pages/Clients";
+import Templates from "./pages/Templates";
+import Profile from "./pages/Profile";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -15,8 +22,23 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          {/* Redirect root to dashboard */}
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          
+          {/* Dashboard Layout with nested routes */}
+          <Route path="/" element={<DashboardLayout />}>
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="create-invoice" element={<CreateInvoice />} />
+            <Route path="invoices" element={<Invoices />} />
+            <Route path="clients" element={<Clients />} />
+            <Route path="templates" element={<Templates />} />
+            <Route path="profile" element={<Profile />} />
+          </Route>
+          
+          {/* Legacy route for the original single-page app */}
+          <Route path="/legacy" element={<Index />} />
+          
+          {/* Catch-all route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
