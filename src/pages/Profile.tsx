@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,18 +12,80 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Upload, Save, User, Building2, Camera } from "lucide-react";
+import { Upload, Save, User, Building2, Camera, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { ProfileController } from "@/controllers/profile.controller";
+import { UserProfile } from "@/services/profile.service";
+import * as currencyCodes from "currency-codes";
+import currencySymbolMap from "currency-symbol-map";
+
+// Get all currencies from the package and sort them with popular ones first
+const POPULAR_CURRENCIES = [
+  "USD",
+  "EUR",
+  "GBP",
+  "JPY",
+  "AUD",
+  "CAD",
+  "CHF",
+  "CNY",
+  "SEK",
+  "NZD",
+  "MXN",
+  "SGD",
+  "HKD",
+  "NOK",
+  "TRY",
+  "RUB",
+  "INR",
+  "BRL",
+  "ZAR",
+  "KRW",
+];
+
+const CURRENCIES = [
+  // Popular currencies first
+  ...POPULAR_CURRENCIES.map((code) => {
+    const currency = currencyCodes.code(code);
+    return currency
+      ? {
+          code: currency.code,
+          name: currency.currency,
+          symbol: currencySymbolMap(currency.code) || currency.code,
+        }
+      : null;
+  }).filter(Boolean),
+
+  // All other currencies
+  ...currencyCodes
+    .codes()
+    .filter((code) => !POPULAR_CURRENCIES.includes(code))
+    .map((code) => {
+      const currency = currencyCodes.code(code);
+      return currency
+        ? {
+            code: currency.code,
+            name: currency.currency,
+            symbol: currencySymbolMap(currency.code) || currency.code,
+          }
+        : null;
+    })
+    .filter(Boolean),
+];
 
 export default function Profile() {
+  const { user } = useAuth();
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [profileData, setProfileData] = useState({
     // Business Information
-    businessName: "Your Business Name",
-    email: "business@example.com",
-    phone: "+1 (555) 123-4567",
-    website: "https://yourbusiness.com",
-    address: "123 Business Street\nCity, State 12345\nCountry",
+    businessName: "",
+    email: "",
+    phone: "",
+    website: "",
+    address: "",
 
     // Invoice Settings
     defaultCurrency: "USD",
@@ -34,51 +96,163 @@ export default function Profile() {
     // Bank Information (optional)
     bankName: "",
     accountNumber: "",
-    routingNumber: "",
+    swiftCode: "",
     iban: "",
   });
 
+  // Load profile data on component mount
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user?.id) return;
+
+      setIsLoading(true);
+      try {
+        const response = await ProfileController.getProfile(user.id);
+        if (response.success && response.data) {
+          setProfileData({
+            businessName: response.data.business_name || "",
+            email: response.data.email || "",
+            phone: response.data.phone || "",
+            website: response.data.website || "",
+            address: response.data.address || "",
+            defaultCurrency: response.data.default_currency || "USD",
+            defaultTaxRate: response.data.default_tax_rate || 10,
+            defaultPaymentTerms: response.data.default_payment_terms || 30,
+            invoicePrefix: response.data.invoice_prefix || "INV",
+            bankName: response.data.bank_name || "",
+            accountNumber: response.data.account_number || "",
+            swiftCode: response.data.swift_code || "",
+            iban: response.data.iban || "",
+          });
+        }
+      } catch (error) {
+        console.error("Error loading profile:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load profile data",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, [user?.id]);
+
   const handleLogoUpload = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
-      if (file) {
-        if (file.size > 5 * 1024 * 1024) {
+      if (!file || !user?.id) return;
+
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please upload an image smaller than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      try {
+        const response = await ProfileController.uploadLogo(user.id, file);
+        if (response.success) {
+          setLogoPreview(response.data?.logo_url || null);
           toast({
-            title: "File too large",
-            description: "Please upload an image smaller than 5MB",
+            title: "Success",
+            description: "Logo uploaded successfully",
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: response.message,
             variant: "destructive",
           });
-          return;
         }
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setLogoPreview(e.target?.result as string);
-        };
-        reader.readAsDataURL(file);
-
+      } catch (error) {
+        console.error("Error uploading logo:", error);
         toast({
-          title: "Logo Updated",
-          description: "Your business logo has been updated.",
+          title: "Error",
+          description: "Failed to upload logo",
+          variant: "destructive",
         });
       }
     },
-    []
+    [user?.id]
   );
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | number) => {
     setProfileData((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
-  const handleSave = () => {
-    toast({
-      title: "Profile Saved",
-      description: "Your profile information has been saved successfully.",
-    });
+  const handleSaveProfile = async () => {
+    if (!user?.id) return;
+
+    setIsSaving(true);
+    try {
+      const response = await ProfileController.saveProfile(user.id, {
+        business_name: profileData.businessName,
+        email: profileData.email,
+        phone: profileData.phone,
+        website: profileData.website,
+        address: profileData.address,
+        default_currency: profileData.defaultCurrency,
+        default_tax_rate: profileData.defaultTaxRate,
+        default_payment_terms: profileData.defaultPaymentTerms,
+        invoice_prefix: profileData.invoicePrefix,
+        bank_name: profileData.bankName,
+        account_number: profileData.accountNumber,
+        swift_code: profileData.swiftCode,
+        iban: profileData.iban,
+      });
+
+      if (response.success) {
+        toast({
+          title: "Success",
+          description: "Profile saved successfully",
+        });
+      } else {
+        if (response.errors && response.errors.length > 0) {
+          const firstError = response.errors[0];
+          toast({
+            title: "Validation Error",
+            description: `${firstError.field}: ${firstError.message}`,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: response.message,
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save profile",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  // Show loading state while profile is being loaded
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center space-x-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading profile...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -232,14 +406,29 @@ export default function Profile() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="defaultCurrency">Default Currency</Label>
-              <Input
-                id="defaultCurrency"
+              <Select
                 value={profileData.defaultCurrency}
-                onChange={(e) =>
-                  handleInputChange("defaultCurrency", e.target.value)
+                onValueChange={(value) =>
+                  handleInputChange("defaultCurrency", value)
                 }
-                placeholder="USD"
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  {CURRENCIES.map((currency) => (
+                    <SelectItem key={currency.code} value={currency.code}>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{currency.symbol}</span>
+                        <span>{currency.code}</span>
+                        <span className="text-muted-foreground">
+                          - {currency.name}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -291,8 +480,8 @@ export default function Profile() {
         <CardHeader>
           <CardTitle>Banking Information (Optional)</CardTitle>
           <p className="text-sm text-muted-foreground">
-            This information will be included in your invoices for client
-            payments.
+            This information will be included in your invoices for international
+            client payments.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -303,7 +492,7 @@ export default function Profile() {
                 id="bankName"
                 value={profileData.bankName}
                 onChange={(e) => handleInputChange("bankName", e.target.value)}
-                placeholder="Bank of America"
+                placeholder="Bank Name"
               />
             </div>
 
@@ -320,15 +509,17 @@ export default function Profile() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="routingNumber">Routing Number</Label>
+              <Label htmlFor="swiftCode">SWIFT Code</Label>
               <Input
-                id="routingNumber"
-                value={profileData.routingNumber}
-                onChange={(e) =>
-                  handleInputChange("routingNumber", e.target.value)
-                }
-                placeholder="021000021"
+                id="swiftCode"
+                value={profileData.swiftCode}
+                onChange={(e) => handleInputChange("swiftCode", e.target.value)}
+                placeholder="BOFAUS3N"
+                className="uppercase"
               />
+              <p className="text-xs text-muted-foreground">
+                8-11 character code for international wire transfers
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -347,11 +538,16 @@ export default function Profile() {
       {/* Save Button */}
       <div className="flex justify-end">
         <Button
-          onClick={handleSave}
+          onClick={handleSaveProfile}
+          disabled={isSaving}
           className="bg-primary-gradient hover:opacity-90"
         >
-          <Save className="h-4 w-4 mr-2" />
-          Save Profile
+          {isSaving ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4 mr-2" />
+          )}
+          {isSaving ? "Saving..." : "Save Profile"}
         </Button>
       </div>
     </div>
