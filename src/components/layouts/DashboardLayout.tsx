@@ -2,9 +2,8 @@ import React from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { Search, Bell, Settings, User } from "lucide-react";
+import { Bell, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
 // Helper function to get page title based on current route
@@ -35,7 +34,7 @@ export const DashboardLayout = () => {
           <header className="h-16 border-b border-border/60 bg-card/95 backdrop-blur-md shadow-lg flex items-center px-4 lg:px-6 relative z-10">
             {/* Subtle gradient overlay for depth */}
             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 opacity-50" />
-            
+
             <div className="relative flex items-center w-full gap-4">
               {/* Sidebar Toggle */}
               <SidebarTrigger className="hover:bg-muted/80 transition-colors shrink-0" />
@@ -61,15 +60,6 @@ export const DashboardLayout = () => {
                 </p>
               </div>
 
-              {/* Search Bar */}
-              <div className="hidden md:flex items-center relative max-w-sm w-full">
-                <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search invoices, clients..."
-                  className="pl-10 pr-4 h-9 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
-                />
-              </div>
-
               {/* Header Actions */}
               <div className="flex items-center gap-2">
                 {/* Notifications */}
@@ -84,11 +74,6 @@ export const DashboardLayout = () => {
                   </Badge>
                 </Button>
 
-                {/* Settings */}
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <Settings className="h-4 w-4" />
-                </Button>
-
                 {/* User Profile */}
                 <Button variant="ghost" size="icon" className="h-9 w-9">
                   <User className="h-4 w-4" />
@@ -98,7 +83,7 @@ export const DashboardLayout = () => {
           </header>
 
           {/* Enhanced Main Content */}
-          <main className="flex-1 p-4 lg:p-6 bg-muted/20 relative overflow-hidden">
+          <main className="flex-1 p-4 lg:p-6 bg-muted/20 relative overflow-hidden border-t border-border/20">
             {/* Enhanced background pattern with depth */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,hsl(var(--primary)/0.08),transparent_60%)] pointer-events-none" />
             <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_0%,hsl(var(--primary)/0.02)_50%,transparent_100%)] pointer-events-none" />

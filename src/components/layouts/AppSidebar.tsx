@@ -68,10 +68,13 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarContent className="bg-sidebar border-sidebar-border shadow-sm">
+      <SidebarContent className="bg-sidebar/95 backdrop-blur-md border-sidebar-border shadow-lg relative">
+        {/* Subtle depth overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-primary/3 pointer-events-none" />
+
         {/* Premium Logo Section */}
         <div
-          className={`border-b border-sidebar-border/30 bg-gradient-to-r from-primary/5 to-transparent ${
+          className={`relative border-b border-sidebar-border/60 bg-gradient-to-r from-primary/8 via-primary/5 to-transparent ${
             state === "collapsed" ? "p-3" : "h-16 px-6"
           }`}
         >
@@ -81,7 +84,7 @@ export function AppSidebar() {
             }`}
           >
             <div
-              className={`bg-primary-gradient rounded-xl flex items-center justify-center shadow-soft ${
+              className={`bg-primary-gradient rounded-xl flex items-center justify-center shadow-lg ${
                 state === "collapsed" ? "w-8 h-8" : "w-10 h-10"
               }`}
             >
@@ -101,7 +104,9 @@ export function AppSidebar() {
           </div>
         </div>
 
-        <div className={`py-6 ${state === "collapsed" ? "px-2" : "px-3"}`}>
+        <div
+          className={`relative py-6 ${state === "collapsed" ? "px-2" : "px-3"}`}
+        >
           <SidebarGroup>
             {state !== "collapsed" && (
               <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs uppercase tracking-wider font-medium px-3 mb-4">
