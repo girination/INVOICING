@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, FileText, Eye, EyeOff, Palette, ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Download, FileText, Eye, EyeOff, Palette } from "lucide-react";
 import { InvoiceForm } from "@/components/InvoiceForm";
 import { InvoicePreview } from "@/components/InvoicePreview";
 import { TemplateSelector } from "@/components/TemplateSelector";
@@ -133,19 +132,11 @@ const CreateInvoice = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link to="/dashboard">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Create Invoice</h1>
-            <p className="text-muted-foreground mt-1">
-              Create professional invoices in minutes
-            </p>
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Create Invoice</h1>
+          <p className="text-muted-foreground mt-1">
+            Create professional invoices in minutes
+          </p>
         </div>
 
         <div className="flex items-center gap-3">

@@ -1,7 +1,15 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Users, TrendingUp, Plus, Eye, User } from "lucide-react";
+import {
+  FileText,
+  Users,
+  TrendingUp,
+  Plus,
+  Eye,
+  User,
+  Layout,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Dashboard() {
@@ -236,7 +244,7 @@ export default function Dashboard() {
                   className="w-full justify-start h-12 shadow-sm hover:shadow-md transition-all hover:scale-105 group-hover:bg-success/5"
                 >
                   <div className="p-1 bg-success/10 rounded mr-3">
-                    <Download className="h-4 w-4 text-success" />
+                    <Layout className="h-4 w-4 text-success" />
                   </div>
                   Templates
                 </Button>

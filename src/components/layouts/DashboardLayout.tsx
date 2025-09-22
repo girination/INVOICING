@@ -31,7 +31,7 @@ export const DashboardLayout = () => {
 
         <div className="flex-1 flex flex-col">
           {/* Enhanced Header */}
-          <header className="h-16 border-b border-border/60 bg-card/95 backdrop-blur-md shadow-lg flex items-center px-4 lg:px-6 relative z-10">
+          <header className="sticky top-0 h-16 border-b border-border/60 bg-card/95 backdrop-blur-md shadow-lg flex items-center px-4 lg:px-6 relative z-50">
             {/* Subtle gradient overlay for depth */}
             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 opacity-50" />
 
