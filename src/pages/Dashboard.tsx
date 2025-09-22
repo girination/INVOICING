@@ -74,7 +74,7 @@ export default function Dashboard() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <Link to="/create-invoice">
+          <Link to="/app/create-invoice">
             <Button className="bg-primary-gradient hover:shadow-lg transition-all duration-300 hover:scale-105 shadow-md">
               <Plus className="h-4 w-4 mr-2" />
               Create Invoice
@@ -151,7 +151,7 @@ export default function Dashboard() {
                 </div>
                 Recent Invoices
               </div>
-              <Link to="/invoices">
+              <Link to="/app/invoices">
                 <Button
                   variant="outline"
                   size="sm"
@@ -216,7 +216,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-3">
-              <Link to="/create-invoice" className="block group">
+              <Link to="/app/create-invoice" className="block group">
                 <Button
                   variant="outline"
                   className="w-full justify-start h-12 shadow-sm hover:shadow-md transition-all hover:scale-105 group-hover:bg-primary/5"
@@ -227,7 +227,7 @@ export default function Dashboard() {
                   Create New Invoice
                 </Button>
               </Link>
-              <Link to="/clients" className="block group">
+              <Link to="/app/clients" className="block group">
                 <Button
                   variant="outline"
                   className="w-full justify-start h-12 shadow-sm hover:shadow-md transition-all hover:scale-105 group-hover:bg-info/5"
@@ -238,7 +238,7 @@ export default function Dashboard() {
                   Manage Clients
                 </Button>
               </Link>
-              <Link to="/templates" className="block group">
+              <Link to="/app/templates" className="block group">
                 <Button
                   variant="outline"
                   className="w-full justify-start h-12 shadow-sm hover:shadow-md transition-all hover:scale-105 group-hover:bg-success/5"
@@ -249,7 +249,7 @@ export default function Dashboard() {
                   Templates
                 </Button>
               </Link>
-              <Link to="/profile" className="block group">
+              <Link to="/app/profile" className="block group">
                 <Button
                   variant="outline"
                   className="w-full justify-start h-12 shadow-sm hover:shadow-md transition-all hover:scale-105 group-hover:bg-warning/5"

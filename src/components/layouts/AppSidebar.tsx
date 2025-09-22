@@ -1,5 +1,6 @@
 import React from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
 import {
   LayoutDashboard,
   Users,
@@ -8,6 +9,7 @@ import {
   Plus,
   User,
   Building2,
+  LogOut,
 } from "lucide-react";
 
 import {
@@ -25,32 +27,32 @@ import {
 const navigationItems = [
   {
     title: "Dashboard",
-    url: "/dashboard",
+    url: "/app/dashboard",
     icon: LayoutDashboard,
   },
   {
     title: "Create Invoice",
-    url: "/create-invoice",
+    url: "/app/create-invoice",
     icon: Plus,
   },
   {
     title: "Invoices",
-    url: "/invoices",
+    url: "/app/invoices",
     icon: FileText,
   },
   {
     title: "Clients",
-    url: "/clients",
+    url: "/app/clients",
     icon: Users,
   },
   {
     title: "Templates",
-    url: "/templates",
+    url: "/app/templates",
     icon: Layout,
   },
   {
     title: "Profile",
-    url: "/profile",
+    url: "/app/profile",
     icon: User,
   },
 ];
@@ -58,6 +60,7 @@ const navigationItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPath = location.pathname;
 
   const isActive = (path: string) => currentPath === path;
@@ -65,6 +68,29 @@ export function AppSidebar() {
     isActive
       ? "bg-primary/10 text-primary font-medium shadow-sm"
       : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground";
+
+  const handleLogout = async () => {
+    try {
+      // TODO: Implement Supabase logout
+      // await supabase.auth.signOut();
+
+      // Simulate logout
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      toast({
+        title: "Logged out successfully",
+        description: "You have been signed out of your account.",
+      });
+
+      navigate("/signin");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -145,6 +171,46 @@ export function AppSidebar() {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </div>
+
+        {/* Logout Section */}
+        <div
+          className={`relative mt-auto ${
+            state === "collapsed" ? "px-2" : "px-3"
+          }`}
+        >
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu
+                className={`space-y-2 ${
+                  state === "collapsed" ? "items-center" : ""
+                }`}
+              >
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={handleLogout}
+                    tooltip={state === "collapsed" ? "Logout" : undefined}
+                    className={state === "collapsed" ? "justify-center" : ""}
+                  >
+                    <div
+                      className={`${getNavCls({
+                        isActive: false,
+                      })} transition-all duration-200 rounded-lg group ${
+                        state === "collapsed"
+                          ? "mx-0 justify-center items-center"
+                          : "mx-2"
+                      } flex items-center gap-2 w-full`}
+                    >
+                      <LogOut className="h-4 w-4 transition-transform group-hover:scale-110" />
+                      {state !== "collapsed" && (
+                        <span className="font-medium">Logout</span>
+                      )}
+                    </div>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

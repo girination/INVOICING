@@ -9,12 +9,12 @@ import { Badge } from "@/components/ui/badge";
 // Helper function to get page title based on current route
 const getPageTitle = (pathname: string) => {
   const routes: Record<string, string> = {
-    "/dashboard": "Dashboard",
-    "/create-invoice": "Create Invoice",
-    "/invoices": "Invoices",
-    "/clients": "Clients",
-    "/templates": "Templates",
-    "/profile": "Profile",
+    "/app/dashboard": "Dashboard",
+    "/app/create-invoice": "Create Invoice",
+    "/app/invoices": "Invoices",
+    "/app/clients": "Clients",
+    "/app/templates": "Templates",
+    "/app/profile": "Profile",
   };
 
   return routes[pathname] || "Dashboard";
@@ -45,17 +45,17 @@ export const DashboardLayout = () => {
                   {currentPageTitle}
                 </h1>
                 <p className="text-sm text-muted-foreground hidden sm:block">
-                  {location.pathname === "/dashboard" &&
+                  {location.pathname === "/app/dashboard" &&
                     "Overview of your invoice management"}
-                  {location.pathname === "/create-invoice" &&
+                  {location.pathname === "/app/create-invoice" &&
                     "Create a new professional invoice"}
-                  {location.pathname === "/invoices" &&
+                  {location.pathname === "/app/invoices" &&
                     "Manage all your invoices"}
-                  {location.pathname === "/clients" &&
+                  {location.pathname === "/app/clients" &&
                     "Manage your client database"}
-                  {location.pathname === "/templates" &&
+                  {location.pathname === "/app/templates" &&
                     "Customize your invoice templates"}
-                  {location.pathname === "/profile" &&
+                  {location.pathname === "/app/profile" &&
                     "Manage your account settings"}
                 </p>
               </div>
