@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -18,15 +19,25 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Plus, Edit, Trash2, Mail, MapPin, Phone, Search } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+} from "@/components/ui/table";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Mail,
+  MapPin,
+  Search,
+  User,
+  Building2,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 interface Client {
   id: string;
   name: string;
   email: string;
-  phone: string;
   address: string;
   totalInvoices: number;
   totalAmount: number;
@@ -35,43 +46,72 @@ interface Client {
 export default function Clients() {
   const [clients, setClients] = useState<Client[]>([
     {
-      id: '1',
-      name: 'Acme Corporation',
-      email: 'contact@acme.com',
-      phone: '+1 (555) 123-4567',
-      address: '123 Business St, New York, NY 10001',
+      id: "1",
+      name: "Acme Corporation",
+      email: "contact@acme.com",
+      address: "123 Business St, New York, NY 10001",
       totalInvoices: 5,
       totalAmount: 7500,
     },
     {
-      id: '2',
-      name: 'Tech Solutions Ltd',
-      email: 'info@techsolutions.com',
-      phone: '+1 (555) 987-6543',
-      address: '456 Tech Ave, San Francisco, CA 94105',
+      id: "2",
+      name: "Tech Solutions Ltd",
+      email: "info@techsolutions.com",
+      address: "456 Tech Ave, San Francisco, CA 94105",
       totalInvoices: 3,
       totalAmount: 4200,
     },
   ]);
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
+    name: "",
+    email: "",
+    address: "",
   });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  const filteredClients = clients.filter(client =>
-    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredClients = clients.filter(
+    (client) =>
+      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Form validation
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+
+    if (!formData.name.trim()) {
+      errors.name = "Client name is required";
+    } else if (formData.name.trim().length < 2) {
+      errors.name = "Client name must be at least 2 characters";
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = "Please enter a valid email address";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (formErrors[field]) {
+      setFormErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+  };
 
   const handleAddClient = () => {
     setEditingClient(null);
-    setFormData({ name: '', email: '', phone: '', address: '' });
+    setFormData({ name: "", email: "", address: "" });
+    setFormErrors({});
     setIsDialogOpen(true);
   };
 
@@ -80,51 +120,71 @@ export default function Clients() {
     setFormData({
       name: client.name,
       email: client.email,
-      phone: client.phone,
       address: client.address,
     });
+    setFormErrors({});
     setIsDialogOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (editingClient) {
-      // Update existing client
-      setClients(prev => prev.map(client =>
-        client.id === editingClient.id
-          ? { ...client, ...formData }
-          : client
-      ));
-      toast({
-        title: 'Client Updated',
-        description: 'Client information has been updated successfully.',
-      });
-    } else {
-      // Add new client
-      const newClient: Client = {
-        id: Date.now().toString(),
-        ...formData,
-        totalInvoices: 0,
-        totalAmount: 0,
-      };
-      setClients(prev => [...prev, newClient]);
-      toast({
-        title: 'Client Added',
-        description: 'New client has been added successfully.',
-      });
+
+    if (!validateForm()) {
+      return;
     }
-    
-    setIsDialogOpen(false);
-    setFormData({ name: '', email: '', phone: '', address: '' });
+
+    setIsSubmitting(true);
+
+    try {
+      // Simulate API call delay
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      if (editingClient) {
+        // Update existing client
+        setClients((prev) =>
+          prev.map((client) =>
+            client.id === editingClient.id ? { ...client, ...formData } : client
+          )
+        );
+        toast({
+          title: "Client Updated",
+          description: "Client information has been updated successfully.",
+        });
+      } else {
+        // Add new client
+        const newClient: Client = {
+          id: Date.now().toString(),
+          ...formData,
+          totalInvoices: 0,
+          totalAmount: 0,
+        };
+        setClients((prev) => [...prev, newClient]);
+        toast({
+          title: "Client Added",
+          description: "New client has been added successfully.",
+        });
+      }
+
+      setIsDialogOpen(false);
+      setFormData({ name: "", email: "", address: "" });
+      setFormErrors({});
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDeleteClient = (clientId: string) => {
-    setClients(prev => prev.filter(client => client.id !== clientId));
+    setClients((prev) => prev.filter((client) => client.id !== clientId));
     toast({
-      title: 'Client Deleted',
-      description: 'Client has been deleted successfully.',
-      variant: 'destructive',
+      title: "Client Deleted",
+      description: "Client has been deleted successfully.",
+      variant: "destructive",
     });
   };
 
@@ -140,68 +200,153 @@ export default function Clients() {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={handleAddClient} className="bg-primary-gradient hover:opacity-90">
+            <Button
+              onClick={handleAddClient}
+              className="bg-primary-gradient hover:opacity-90 shadow-lg"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add Client
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>
-                {editingClient ? 'Edit Client' : 'Add New Client'}
-              </DialogTitle>
+          <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  {editingClient ? (
+                    <Edit className="h-5 w-5 text-primary" />
+                  ) : (
+                    <User className="h-5 w-5 text-primary" />
+                  )}
+                </div>
+                <div>
+                  <DialogTitle className="text-xl font-semibold">
+                    {editingClient ? "Edit Client" : "Add New Client"}
+                  </DialogTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {editingClient
+                      ? "Update client information"
+                      : "Enter client details to get started"}
+                  </p>
+                </div>
+              </div>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Client Name</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Enter client name"
-                  required
-                />
+
+            <Separator className="my-4" />
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Client Information Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Building2 className="h-4 w-4 text-primary" />
+                  <h3 className="font-medium text-sm text-foreground">
+                    Client Information
+                  </h3>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-sm font-medium">
+                    Client Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    placeholder="Enter client or company name"
+                    className={
+                      formErrors.name
+                        ? "border-red-500 focus:border-red-500"
+                        : ""
+                    }
+                    disabled={isSubmitting}
+                  />
+                  {formErrors.name && (
+                    <div className="flex items-center gap-1 text-sm text-red-600">
+                      <AlertCircle className="h-3 w-3" />
+                      <span>{formErrors.name}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium">
+                    Email Address <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    placeholder="client@company.com"
+                    className={
+                      formErrors.email
+                        ? "border-red-500 focus:border-red-500"
+                        : ""
+                    }
+                    disabled={isSubmitting}
+                  />
+                  {formErrors.email && (
+                    <div className="flex items-center gap-1 text-sm text-red-600">
+                      <AlertCircle className="h-3 w-3" />
+                      <span>{formErrors.email}</span>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="Enter email address"
-                  required
-                />
+
+              <Separator />
+
+              {/* Contact Information Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  <h3 className="font-medium text-sm text-foreground">
+                    Address Information
+                  </h3>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="address" className="text-sm font-medium">
+                    Address
+                  </Label>
+                  <Textarea
+                    id="address"
+                    value={formData.address}
+                    onChange={(e) =>
+                      handleInputChange("address", e.target.value)
+                    }
+                    placeholder="Enter full address including city, state, and postal code"
+                    className="min-h-[80px] resize-none"
+                    disabled={isSubmitting}
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="Enter phone number"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
-                <Textarea
-                  id="address"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  placeholder="Enter client address"
-                  className="min-h-[80px]"
-                />
-              </div>
-              <div className="flex justify-end gap-3">
+
+              <Separator />
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-3 pt-2">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsDialogOpen(false)}
+                  disabled={isSubmitting}
+                  className="min-w-[80px]"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" className="bg-primary-gradient hover:opacity-90">
-                  {editingClient ? 'Update Client' : 'Add Client'}
+                <Button
+                  type="submit"
+                  className="bg-primary-gradient hover:opacity-90 min-w-[120px]"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      {editingClient ? "Updating..." : "Adding..."}
+                    </>
+                  ) : (
+                    <>{editingClient ? "Update Client" : "Add Client"}</>
+                  )}
                 </Button>
               </div>
             </form>
@@ -244,8 +389,13 @@ export default function Clients() {
               <TableBody>
                 {filteredClients.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      {searchTerm ? 'No clients found matching your search.' : 'No clients added yet.'}
+                    <TableCell
+                      colSpan={5}
+                      className="text-center py-8 text-muted-foreground"
+                    >
+                      {searchTerm
+                        ? "No clients found matching your search."
+                        : "No clients added yet."}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -256,26 +406,22 @@ export default function Clients() {
                           <p className="font-medium">{client.name}</p>
                           <p className="text-sm text-muted-foreground flex items-center">
                             <MapPin className="h-3 w-3 mr-1" />
-                            {client.address ? client.address.split(',')[0] : 'No address'}
+                            {client.address
+                              ? client.address.split(",")[0]
+                              : "No address"}
                           </p>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="space-y-1">
-                          <div className="flex items-center text-sm">
-                            <Mail className="h-3 w-3 mr-1 text-muted-foreground" />
-                            {client.email}
-                          </div>
-                          {client.phone && (
-                            <div className="flex items-center text-sm text-muted-foreground">
-                              <Phone className="h-3 w-3 mr-1" />
-                              {client.phone}
-                            </div>
-                          )}
+                        <div className="flex items-center text-sm">
+                          <Mail className="h-3 w-3 mr-1 text-muted-foreground" />
+                          {client.email}
                         </div>
                       </TableCell>
                       <TableCell>{client.totalInvoices}</TableCell>
-                      <TableCell>${client.totalAmount.toLocaleString()}</TableCell>
+                      <TableCell>
+                        ${client.totalAmount.toLocaleString()}
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button
