@@ -210,7 +210,6 @@ export class ValidationService {
     email: string;
     password: string;
     confirmPassword: string;
-    company: string;
     acceptTerms: boolean;
   }): { isValid: boolean; errors: ValidationResult[] } {
     const errors: ValidationResult[] = [];
@@ -246,12 +245,6 @@ export class ValidationService {
     );
     if (!confirmPasswordValidation.isValid) {
       errors.push(confirmPasswordValidation);
-    }
-
-    // Validate company (optional)
-    const companyValidation = this.validateCompany(data.company);
-    if (!companyValidation.isValid) {
-      errors.push(companyValidation);
     }
 
     // Validate terms acceptance

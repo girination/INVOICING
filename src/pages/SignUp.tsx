@@ -24,7 +24,6 @@ const SignUp = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    company: "",
     acceptTerms: false,
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -90,7 +89,6 @@ const SignUp = () => {
       const response = await signUp(formData.email, formData.password, {
         first_name: formData.firstName,
         last_name: formData.lastName,
-        company: formData.company,
       });
 
       if (!response.success) {
@@ -225,20 +223,6 @@ const SignUp = () => {
                     value={formData.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
                     required
-                    className="h-11"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="company">Company (optional)</Label>
-                  <Input
-                    id="company"
-                    type="text"
-                    placeholder="Acme Inc."
-                    value={formData.company}
-                    onChange={(e) =>
-                      handleInputChange("company", e.target.value)
-                    }
                     className="h-11"
                   />
                 </div>
