@@ -72,12 +72,12 @@ export function AppSidebar() {
         {/* Premium Logo Section */}
         <div
           className={`border-b border-sidebar-border/30 bg-gradient-to-r from-primary/5 to-transparent ${
-            state === "collapsed" ? "p-3" : "p-6"
+            state === "collapsed" ? "p-3" : "h-16 px-6"
           }`}
         >
           <div
             className={`flex items-center ${
-              state === "collapsed" ? "justify-center" : "gap-3"
+              state === "collapsed" ? "justify-center" : "gap-3 h-full"
             }`}
           >
             <div
@@ -95,9 +95,6 @@ export function AppSidebar() {
               <div className="flex flex-col">
                 <span className="font-bold text-sidebar-foreground text-lg">
                   Invoice Pro
-                </span>
-                <span className="text-xs text-sidebar-foreground/60">
-                  Professional Edition
                 </span>
               </div>
             )}
