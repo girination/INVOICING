@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { Bell, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
+import ProfileSetupModal from "@/components/ProfileSetupModal";
 
 // Helper function to get page title based on current route
 const getPageTitle = (pathname: string) => {
@@ -23,6 +25,17 @@ const getPageTitle = (pathname: string) => {
 export const DashboardLayout = () => {
   const location = useLocation();
   const currentPageTitle = getPageTitle(location.pathname);
+  const { user, hasProfile, profileLoading } = useAuth();
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
+  // Show profile modal when user is authenticated but doesn't have a profile
+  useEffect(() => {
+    if (user && !hasProfile && !profileLoading) {
+      setShowProfileModal(true);
+    }
+  }, [user, hasProfile, profileLoading]);
+
+  // No need for handleProfileCreated since modal just navigates to profile page
 
   return (
     <SidebarProvider>
@@ -94,6 +107,14 @@ export const DashboardLayout = () => {
           </main>
         </div>
       </div>
+
+      {/* Profile Setup Modal */}
+      {user && (
+        <ProfileSetupModal
+          isOpen={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+        />
+      )}
     </SidebarProvider>
   );
 };
