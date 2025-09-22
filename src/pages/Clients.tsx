@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Table,
   TableBody,
   TableCell,
@@ -20,6 +26,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import {
   Plus,
   Edit,
@@ -31,37 +46,17 @@ import {
   Building2,
   Loader2,
   AlertCircle,
+  MoreVertical,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-
-interface Client {
-  id: string;
-  name: string;
-  email: string;
-  address: string;
-  totalInvoices: number;
-  totalAmount: number;
-}
+import { useAuth } from "@/contexts/AuthContext";
+import { ClientController } from "@/controllers/client.controller";
+import { Client } from "@/services/client.service";
 
 export default function Clients() {
-  const [clients, setClients] = useState<Client[]>([
-    {
-      id: "1",
-      name: "Acme Corporation",
-      email: "contact@acme.com",
-      address: "123 Business St, New York, NY 10001",
-      totalInvoices: 5,
-      totalAmount: 7500,
-    },
-    {
-      id: "2",
-      name: "Tech Solutions Ltd",
-      email: "info@techsolutions.com",
-      address: "456 Tech Ave, San Francisco, CA 94105",
-      totalInvoices: 3,
-      totalAmount: 4200,
-    },
-  ]);
+  const { user } = useAuth();
+  const [clients, setClients] = useState<Client[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -74,11 +69,59 @@ export default function Clients() {
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+
   const filteredClients = clients.filter(
     (client) =>
       client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       client.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedClients = filteredClients.slice(startIndex, endIndex);
+
+  // Reset to first page when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  // Load clients from Supabase
+  const loadClients = useCallback(async () => {
+    if (!user?.id) return;
+
+    setIsLoading(true);
+    try {
+      const response = await ClientController.getClients(user.id);
+      if (response.success) {
+        setClients(response.data as Client[]);
+      } else {
+        toast({
+          title: "Error",
+          description: response.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error loading clients:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load clients",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id]);
+
+  // Load clients on component mount
+  useEffect(() => {
+    loadClients();
+  }, [user?.id, loadClients]);
 
   // Form validation
   const validateForm = () => {
@@ -133,42 +176,85 @@ export default function Clients() {
       return;
     }
 
+    if (!user?.id) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to perform this action",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
       if (editingClient) {
         // Update existing client
-        setClients((prev) =>
-          prev.map((client) =>
-            client.id === editingClient.id ? { ...client, ...formData } : client
-          )
+        const response = await ClientController.updateClient(
+          editingClient.id!,
+          user.id,
+          formData
         );
-        toast({
-          title: "Client Updated",
-          description: "Client information has been updated successfully.",
-        });
+
+        if (response.success) {
+          toast({
+            title: "Client Updated",
+            description: "Client information has been updated successfully.",
+          });
+          // Reload clients to get updated data
+          await loadClients();
+        } else {
+          if (response.errors && response.errors.length > 0) {
+            const firstError = response.errors[0];
+            toast({
+              title: "Validation Error",
+              description: `${firstError.field}: ${firstError.message}`,
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Error",
+              description: response.message,
+              variant: "destructive",
+            });
+          }
+          return;
+        }
       } else {
         // Add new client
-        const newClient: Client = {
-          id: Date.now().toString(),
-          ...formData,
-          totalInvoices: 0,
-          totalAmount: 0,
-        };
-        setClients((prev) => [...prev, newClient]);
-        toast({
-          title: "Client Added",
-          description: "New client has been added successfully.",
-        });
+        const response = await ClientController.createClient(user.id, formData);
+
+        if (response.success) {
+          toast({
+            title: "Client Added",
+            description: "New client has been added successfully.",
+          });
+          // Reload clients to get updated data
+          await loadClients();
+        } else {
+          if (response.errors && response.errors.length > 0) {
+            const firstError = response.errors[0];
+            toast({
+              title: "Validation Error",
+              description: `${firstError.field}: ${firstError.message}`,
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Error",
+              description: response.message,
+              variant: "destructive",
+            });
+          }
+          return;
+        }
       }
 
       setIsDialogOpen(false);
       setFormData({ name: "", email: "", address: "" });
       setFormErrors({});
     } catch (error) {
+      console.error("Error saving client:", error);
       toast({
         title: "Error",
         description: "Something went wrong. Please try again.",
@@ -179,13 +265,42 @@ export default function Clients() {
     }
   };
 
-  const handleDeleteClient = (clientId: string) => {
-    setClients((prev) => prev.filter((client) => client.id !== clientId));
-    toast({
-      title: "Client Deleted",
-      description: "Client has been deleted successfully.",
-      variant: "destructive",
-    });
+  const handleDeleteClient = async (clientId: string) => {
+    if (!user?.id) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to perform this action",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await ClientController.deleteClient(clientId, user.id);
+
+      if (response.success) {
+        toast({
+          title: "Client Deleted",
+          description: "Client has been deleted successfully.",
+          variant: "destructive",
+        });
+        // Reload clients to get updated data
+        await loadClients();
+      } else {
+        toast({
+          title: "Error",
+          description: response.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting client:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete client",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -372,7 +487,16 @@ export default function Clients() {
       {/* Clients Table */}
       <Card className="shadow-soft">
         <CardHeader>
-          <CardTitle>Client List ({filteredClients.length})</CardTitle>
+          <CardTitle>
+            Client List ({filteredClients.length})
+            {filteredClients.length > 0 && (
+              <span className="text-sm font-normal text-muted-foreground ml-2">
+                Showing {startIndex + 1}-
+                {Math.min(endIndex, filteredClients.length)} of{" "}
+                {filteredClients.length}
+              </span>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
@@ -381,16 +505,27 @@ export default function Clients() {
                 <TableRow>
                   <TableHead>Client</TableHead>
                   <TableHead>Contact</TableHead>
-                  <TableHead>Invoices</TableHead>
-                  <TableHead>Total Amount</TableHead>
+                  <TableHead>Address</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredClients.length === 0 ? (
+                {isLoading ? (
                   <TableRow>
                     <TableCell
-                      colSpan={5}
+                      colSpan={4}
+                      className="text-center py-8 text-muted-foreground"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Loading clients...
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredClients.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={4}
                       className="text-center py-8 text-muted-foreground"
                     >
                       {searchTerm
@@ -399,17 +534,11 @@ export default function Clients() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredClients.map((client) => (
+                  paginatedClients.map((client) => (
                     <TableRow key={client.id}>
                       <TableCell>
                         <div>
                           <p className="font-medium">{client.name}</p>
-                          <p className="text-sm text-muted-foreground flex items-center">
-                            <MapPin className="h-3 w-3 mr-1" />
-                            {client.address
-                              ? client.address.split(",")[0]
-                              : "No address"}
-                          </p>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -418,28 +547,41 @@ export default function Clients() {
                           {client.email}
                         </div>
                       </TableCell>
-                      <TableCell>{client.totalInvoices}</TableCell>
                       <TableCell>
-                        ${client.totalAmount.toLocaleString()}
+                        <div className="text-sm text-muted-foreground flex items-center">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          {client.address || "No address"}
+                        </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditClient(client)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteClient(client.id)}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                            >
+                              <span className="sr-only">Open menu</span>
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => handleEditClient(client)}
+                              className="cursor-pointer"
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit Client
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteClient(client.id!)}
+                              className="cursor-pointer text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Client
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))
@@ -448,6 +590,74 @@ export default function Clients() {
             </Table>
           </div>
         </CardContent>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t">
+            <div className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </div>
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    className={
+                      currentPage === 1
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+
+                {/* Page numbers */}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNumber;
+                  if (totalPages <= 5) {
+                    pageNumber = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNumber = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNumber = totalPages - 4 + i;
+                  } else {
+                    pageNumber = currentPage - 2 + i;
+                  }
+
+                  return (
+                    <PaginationItem key={pageNumber}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(pageNumber)}
+                        isActive={currentPage === pageNumber}
+                        className="cursor-pointer"
+                      >
+                        {pageNumber}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+
+                {totalPages > 5 && currentPage < totalPages - 2 && (
+                  <PaginationItem>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                )}
+
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() =>
+                      setCurrentPage(Math.min(totalPages, currentPage + 1))
+                    }
+                    className={
+                      currentPage === totalPages
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </Card>
     </div>
   );
