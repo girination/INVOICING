@@ -27,7 +27,9 @@ export const DashboardLayout = () => {
   const location = useLocation();
   const currentPageTitle = getPageTitle(location.pathname);
   const { user } = useAuth();
-  const { hasCompleteProfile, profileLoading } = useProfile(user?.id || null);
+  const { profile, hasCompleteProfile, profileLoading } = useProfile(
+    user?.id || null
+  );
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Show profile modal when user is authenticated but doesn't have a complete profile
@@ -96,8 +98,20 @@ export const DashboardLayout = () => {
                 </Button>
 
                 {/* User Profile */}
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <User className="h-4 w-4" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 rounded-full overflow-hidden"
+                >
+                  {profile?.logo_url ? (
+                    <img
+                      src={profile.logo_url}
+                      alt="Profile Logo"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <User className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
             </div>
