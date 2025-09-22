@@ -5,8 +5,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileText, Eye, EyeOff, ArrowLeft, CheckCircle } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
+import {
+  FileText,
+  Eye,
+  EyeOff,
+  ArrowLeft,
+  CheckCircle,
+  Loader2,
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { ValidationService } from "@/services/validation.service";
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -22,6 +31,8 @@ const SignUp = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { signUp } = useAuth();
+  const { toast } = useToast();
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -61,40 +72,51 @@ const SignUp = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) return;
+    // Use validation service instead of custom validation
+    const validation = ValidationService.validateSignUpForm(formData);
+    if (!validation.isValid) {
+      const firstError = validation.errors[0];
+      toast({
+        title: "Validation Error",
+        description: firstError.message,
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsLoading(true);
 
     try {
-      // TODO: Implement Supabase authentication
-      // const { data, error } = await supabase.auth.signUp({
-      //   email: formData.email,
-      //   password: formData.password,
-      //   options: {
-      //     data: {
-      //       first_name: formData.firstName,
-      //       last_name: formData.lastName,
-      //       company: formData.company,
-      //     },
-      //   },
-      // });
+      const response = await signUp(formData.email, formData.password, {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        company: formData.company,
+      });
 
-      // if (error) throw error;
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      if (!response.success) {
+        toast({
+          title: "Error",
+          description: response.message,
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: "Success!",
-        description:
-          "Account created successfully. Please check your email to verify your account.",
+        description: response.message,
       });
 
       navigate("/signin");
-    } catch (error) {
+    } catch (error: unknown) {
+      console.error("Sign up error:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred. Please try again.";
       toast({
         title: "Error",
-        description: "Failed to create account. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -346,7 +368,7 @@ const SignUp = () => {
                 >
                   {isLoading ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-background border-t-transparent mr-2" />
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
                       Creating account...
                     </>
                   ) : (

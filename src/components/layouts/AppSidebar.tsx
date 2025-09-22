@@ -1,5 +1,6 @@
 import React from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import {
   LayoutDashboard,
@@ -69,24 +70,36 @@ export function AppSidebar() {
       ? "bg-primary/10 text-primary font-medium shadow-sm"
       : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground";
 
+  const { signOut } = useAuth();
+
   const handleLogout = async () => {
     try {
-      // TODO: Implement Supabase logout
-      // await supabase.auth.signOut();
+      const response = await signOut();
 
-      // Simulate logout
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      if (!response.success) {
+        toast({
+          title: "Error",
+          description: response.message,
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
-        title: "Logged out successfully",
-        description: "You have been signed out of your account.",
+        title: "Success!",
+        description: response.message,
       });
 
       navigate("/signin");
-    } catch (error) {
+    } catch (error: unknown) {
+      console.error("Logout error:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred. Please try again.";
       toast({
         title: "Error",
-        description: "Failed to log out. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     }

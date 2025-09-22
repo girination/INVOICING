@@ -5,8 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileText, Eye, EyeOff, ArrowLeft } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
+import { FileText, Eye, EyeOff, ArrowLeft, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { ValidationService } from "@/services/validation.service";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -15,33 +17,56 @@ const SignIn = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { signIn } = useAuth();
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // TODO: Implement Supabase authentication
-      // const { data, error } = await supabase.auth.signInWithPassword({
-      //   email,
-      //   password,
-      // });
+      // Validate form data
+      const validation = ValidationService.validateSignInForm({
+        email,
+        password,
+      });
+      if (!validation.isValid) {
+        const firstError = validation.errors[0];
+        toast({
+          title: "Validation Error",
+          description: firstError.message,
+          variant: "destructive",
+        });
+        return;
+      }
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Call auth controller
+      const response = await signIn(email, password);
 
-      // if (error) throw error;
+      if (!response.success) {
+        toast({
+          title: "Error",
+          description: response.message,
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: "Success!",
-        description: "You have been signed in successfully.",
+        description: response.message,
       });
 
-      navigate("/dashboard");
-    } catch (error) {
+      navigate("/app/dashboard");
+    } catch (error: unknown) {
+      console.error("Sign in error:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred. Please try again.";
       toast({
         title: "Error",
-        description: "Invalid email or password. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -176,7 +201,7 @@ const SignIn = () => {
                 >
                   {isLoading ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-background border-t-transparent mr-2" />
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
                       Signing in...
                     </>
                   ) : (

@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 import { DashboardLayout } from "./components/layouts/DashboardLayout";
 import Landing from "./pages/Landing";
 import SignIn from "./pages/SignIn";
@@ -20,58 +22,67 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<Landing />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
 
-          {/* Dashboard Layout with nested routes */}
-          <Route path="/app" element={<DashboardLayout />}>
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="create-invoice" element={<CreateInvoice />} />
-            <Route path="invoices" element={<Invoices />} />
-            <Route path="clients" element={<Clients />} />
-            <Route path="templates" element={<Templates />} />
-            <Route path="profile" element={<Profile />} />
-          </Route>
+            {/* Dashboard Layout with nested routes */}
+            <Route
+              path="/app"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="create-invoice" element={<CreateInvoice />} />
+              <Route path="invoices" element={<Invoices />} />
+              <Route path="clients" element={<Clients />} />
+              <Route path="templates" element={<Templates />} />
+              <Route path="profile" element={<Profile />} />
+            </Route>
 
-          {/* Legacy routes for backward compatibility */}
-          <Route
-            path="/dashboard"
-            element={<Navigate to="/app/dashboard" replace />}
-          />
-          <Route
-            path="/create-invoice"
-            element={<Navigate to="/app/create-invoice" replace />}
-          />
-          <Route
-            path="/invoices"
-            element={<Navigate to="/app/invoices" replace />}
-          />
-          <Route
-            path="/clients"
-            element={<Navigate to="/app/clients" replace />}
-          />
-          <Route
-            path="/templates"
-            element={<Navigate to="/app/templates" replace />}
-          />
-          <Route
-            path="/profile"
-            element={<Navigate to="/app/profile" replace />}
-          />
-          <Route path="/legacy" element={<Index />} />
+            {/* Legacy routes for backward compatibility */}
+            <Route
+              path="/dashboard"
+              element={<Navigate to="/app/dashboard" replace />}
+            />
+            <Route
+              path="/create-invoice"
+              element={<Navigate to="/app/create-invoice" replace />}
+            />
+            <Route
+              path="/invoices"
+              element={<Navigate to="/app/invoices" replace />}
+            />
+            <Route
+              path="/clients"
+              element={<Navigate to="/app/clients" replace />}
+            />
+            <Route
+              path="/templates"
+              element={<Navigate to="/app/templates" replace />}
+            />
+            <Route
+              path="/profile"
+              element={<Navigate to="/app/profile" replace />}
+            />
+            <Route path="/legacy" element={<Index />} />
 
-          {/* Catch-all route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+            {/* Catch-all route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
