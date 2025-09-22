@@ -54,11 +54,11 @@ All colors MUST be HSL.
     --input: 220 13% 91%;
     --ring: 221 83% 53%;
 
-    /* Premium gradients */
+    /* Enhanced gradients for light theme */
     --primary-gradient: linear-gradient(135deg, hsl(221 83% 53%) 0%, hsl(226 71% 60%) 50%, hsl(230 60% 67%) 100%);
-    --secondary-gradient: linear-gradient(135deg, hsl(220 9% 96%) 0%, hsl(220 14% 98%) 100%);
+    --secondary-gradient: linear-gradient(135deg, hsl(220 9% 98%) 0%, hsl(220 14% 100%) 100%);
     --card-gradient: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(220 14% 99%) 100%);
-    --hero-gradient: linear-gradient(135deg, hsl(221 83% 53% / 0.1) 0%, hsl(226 71% 60% / 0.05) 100%);
+    --hero-gradient: linear-gradient(135deg, hsl(221 83% 53% / 0.03) 0%, hsl(226 71% 60% / 0.02) 100%);
     
     /* Professional shadows with depth */
     --shadow-xs: 0 1px 2px 0 hsl(220 20% 20% / 0.05);
@@ -76,14 +76,14 @@ All colors MUST be HSL.
     --radius-lg: 1rem;
     --radius-xl: 1.5rem;
 
-    /* Premium sidebar colors */
-    --sidebar-background: 224 71% 4%;
-    --sidebar-foreground: 210 40% 98%;
+    /* Premium sidebar colors - Light theme */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 224 71% 4%;
     --sidebar-primary: 221 83% 53%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 224 71% 8%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 224 39% 11%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 9% 96%;
+    --sidebar-accent-foreground: 224 71% 4%;
+    --sidebar-border: 220 13% 91%;
     --sidebar-ring: 221 83% 53%;
 
     /* Typography scale */

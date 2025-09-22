@@ -63,19 +63,19 @@ export function AppSidebar() {
   const isActive = (path: string) => currentPath === path;
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive 
-      ? 'bg-sidebar-accent text-sidebar-accent-foreground border-r-2 border-sidebar-primary font-medium shadow-sm' 
-      : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground';
+      ? 'bg-primary/10 text-primary border-r-2 border-primary font-medium shadow-sm' 
+      : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground';
 
   return (
     <Sidebar 
       className={state === 'collapsed' ? 'w-14' : 'w-64'} 
       collapsible="icon"
     >
-      <SidebarContent className="bg-sidebar border-sidebar-border">
+      <SidebarContent className="bg-sidebar border-sidebar-border shadow-sm">
         {/* Premium Logo Section */}
-        <div className="p-6 border-b border-sidebar-border/50">
+        <div className="p-6 border-b border-sidebar-border/30 bg-gradient-to-r from-primary/5 to-transparent">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary-gradient rounded-xl flex items-center justify-center shadow-medium">
+            <div className="w-10 h-10 bg-primary-gradient rounded-xl flex items-center justify-center shadow-soft">
               <Building2 className="h-5 w-5 text-white" />
             </div>
             {state !== 'collapsed' && (
@@ -87,13 +87,13 @@ export function AppSidebar() {
           </div>
         </div>
 
-        <div className="px-3 py-4">
+        <div className="px-3 py-6">
           <SidebarGroup>
-            <SidebarGroupLabel className="text-sidebar-foreground/60 text-xs uppercase tracking-wider font-medium px-3 mb-3">
+            <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs uppercase tracking-wider font-medium px-3 mb-4">
               Navigation
             </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu className="space-y-1">
+              <SidebarMenu className="space-y-2">
                 {navigationItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
@@ -115,10 +115,10 @@ export function AppSidebar() {
           </SidebarGroup>
         </div>
 
-        {/* Premium footer */}
+        {/* Light themed footer */}
         {state !== 'collapsed' && (
-          <div className="mt-auto p-4 border-t border-sidebar-border/50">
-            <div className="bg-sidebar-accent/30 rounded-lg p-3">
+          <div className="mt-auto p-4 border-t border-sidebar-border/30 bg-gradient-to-r from-primary/5 to-transparent">
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
                 <span className="text-xs text-sidebar-foreground/80 font-medium">System Status</span>
