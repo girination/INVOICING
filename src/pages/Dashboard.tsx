@@ -1,38 +1,49 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { 
-  FileText, 
-  Users, 
-  DollarSign, 
-  TrendingUp, 
-  Plus,
-  Eye,
-  Download,
-  User
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { FileText, Users, TrendingUp, Plus, Eye, User } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function Dashboard() {
   // Mock data - in a real app, this would come from your backend
   const stats = {
     totalInvoices: 24,
     totalClients: 8,
-    totalRevenue: 12450,
-    pendingAmount: 2350,
     growth: {
       invoices: 12,
       clients: 25,
-      revenue: 18,
-      pending: -8
-    }
+    },
   };
 
   const recentInvoices = [
-    { id: 'INV-001', client: 'Acme Corp', amount: 1500, status: 'Paid', date: '2024-01-15', trend: 'up' },
-    { id: 'INV-002', client: 'Tech Solutions', amount: 2300, status: 'Pending', date: '2024-01-12', trend: 'up' },
-    { id: 'INV-003', client: 'Design Studio', amount: 850, status: 'Overdue', date: '2024-01-08', trend: 'down' },
-    { id: 'INV-004', client: 'StartupXYZ', amount: 3200, status: 'Paid', date: '2024-01-10', trend: 'up' },
+    {
+      id: "INV-001",
+      client: "Acme Corp",
+      amount: 1500,
+      date: "2024-01-15",
+      trend: "up",
+    },
+    {
+      id: "INV-002",
+      client: "Tech Solutions",
+      amount: 2300,
+      date: "2024-01-12",
+      trend: "up",
+    },
+    {
+      id: "INV-003",
+      client: "Design Studio",
+      amount: 850,
+      date: "2024-01-08",
+      trend: "down",
+    },
+    {
+      id: "INV-004",
+      client: "StartupXYZ",
+      amount: 3200,
+      date: "2024-01-10",
+      trend: "up",
+    },
   ];
 
   return (
@@ -48,15 +59,13 @@ export default function Dashboard() {
           </p>
           <div className="flex items-center gap-2 mt-4">
             <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
-            <span className="text-sm text-muted-foreground">Last updated: Just now</span>
+            <span className="text-sm text-muted-foreground">
+              Last updated: Just now
+            </span>
           </div>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row gap-3">
-          <Button variant="outline" className="shadow-sm hover:shadow-md transition-shadow">
-            <Download className="h-4 w-4 mr-2" />
-            Export Data
-          </Button>
           <Link to="/create-invoice">
             <Button className="bg-primary-gradient hover:shadow-lg transition-all duration-300 hover:scale-105 shadow-md">
               <Plus className="h-4 w-4 mr-2" />
@@ -67,7 +76,7 @@ export default function Dashboard() {
       </div>
 
       {/* Premium Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="bg-card-gradient shadow-medium hover:shadow-large transition-all duration-300 border-0 animate-scale-in">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -78,16 +87,25 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-foreground">{stats.totalInvoices}</div>
+            <div className="text-3xl font-bold text-foreground">
+              {stats.totalInvoices}
+            </div>
             <div className="flex items-center gap-2 mt-2">
               <TrendingUp className="h-3 w-3 text-success" />
-              <span className="text-sm font-medium text-success">+{stats.growth.invoices}%</span>
-              <span className="text-xs text-muted-foreground">from last month</span>
+              <span className="text-sm font-medium text-success">
+                +{stats.growth.invoices}%
+              </span>
+              <span className="text-xs text-muted-foreground">
+                from last month
+              </span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card-gradient shadow-medium hover:shadow-large transition-all duration-300 border-0 animate-scale-in" style={{ animationDelay: '0.1s' }}>
+        <Card
+          className="bg-card-gradient shadow-medium hover:shadow-large transition-all duration-300 border-0 animate-scale-in"
+          style={{ animationDelay: "0.1s" }}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Active Clients
@@ -97,48 +115,17 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-foreground">{stats.totalClients}</div>
+            <div className="text-3xl font-bold text-foreground">
+              {stats.totalClients}
+            </div>
             <div className="flex items-center gap-2 mt-2">
               <TrendingUp className="h-3 w-3 text-success" />
-              <span className="text-sm font-medium text-success">+{stats.growth.clients}%</span>
-              <span className="text-xs text-muted-foreground">from last month</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card-gradient shadow-medium hover:shadow-large transition-all duration-300 border-0 animate-scale-in" style={{ animationDelay: '0.2s' }}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Revenue
-            </CardTitle>
-            <div className="p-2 bg-success/10 rounded-lg">
-              <DollarSign className="h-5 w-5 text-success" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-foreground">${stats.totalRevenue.toLocaleString()}</div>
-            <div className="flex items-center gap-2 mt-2">
-              <TrendingUp className="h-3 w-3 text-success" />
-              <span className="text-sm font-medium text-success">+{stats.growth.revenue}%</span>
-              <span className="text-xs text-muted-foreground">from last month</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card-gradient shadow-medium hover:shadow-large transition-all duration-300 border-0 animate-scale-in" style={{ animationDelay: '0.3s' }}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Pending Amount
-            </CardTitle>
-            <div className="p-2 bg-warning/10 rounded-lg">
-              <TrendingUp className="h-5 w-5 text-warning" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-foreground">${stats.pendingAmount.toLocaleString()}</div>
-            <div className="flex items-center gap-2 mt-2">
-              <div className="h-3 w-3 rounded-full bg-warning animate-pulse" />
-              <span className="text-sm text-muted-foreground">2 pending invoices</span>
+              <span className="text-sm font-medium text-success">
+                +{stats.growth.clients}%
+              </span>
+              <span className="text-xs text-muted-foreground">
+                from last month
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -157,7 +144,11 @@ export default function Dashboard() {
                 Recent Invoices
               </div>
               <Link to="/invoices">
-                <Button variant="outline" size="sm" className="shadow-sm hover:shadow-md transition-shadow">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="shadow-sm hover:shadow-md transition-shadow"
+                >
                   <Eye className="h-4 w-4 mr-2" />
                   View All
                 </Button>
@@ -167,43 +158,36 @@ export default function Dashboard() {
           <CardContent className="p-0">
             <div className="divide-y divide-border/50">
               {recentInvoices.map((invoice, index) => (
-                <div key={invoice.id} className="p-4 hover:bg-muted/30 transition-colors group">
+                <div
+                  key={invoice.id}
+                  className="p-4 hover:bg-muted/30 transition-colors group"
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div className="relative">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                          invoice.status === 'Paid' ? 'bg-success/10' :
-                          invoice.status === 'Pending' ? 'bg-warning/10' : 'bg-destructive/10'
-                        }`}>
-                          <FileText className={`h-5 w-5 ${
-                            invoice.status === 'Paid' ? 'text-success' :
-                            invoice.status === 'Pending' ? 'text-warning' : 'text-destructive'
-                          }`} />
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary/10">
+                          <FileText className="h-5 w-5 text-primary" />
                         </div>
-                        {invoice.trend === 'up' && (
+                        {invoice.trend === "up" && (
                           <TrendingUp className="w-3 h-3 text-success absolute -top-1 -right-1 bg-background rounded-full" />
                         )}
                       </div>
                       <div>
-                        <p className="font-semibold text-foreground">{invoice.id}</p>
-                        <p className="text-sm text-muted-foreground">{invoice.client}</p>
-                        <p className="text-xs text-muted-foreground">{invoice.date}</p>
+                        <p className="font-semibold text-foreground">
+                          {invoice.id}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {invoice.client}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {invoice.date}
+                        </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-lg">${invoice.amount.toLocaleString()}</p>
-                      <div className="flex items-center gap-2 justify-end">
-                        <div className={`w-2 h-2 rounded-full ${
-                          invoice.status === 'Paid' ? 'bg-success' :
-                          invoice.status === 'Pending' ? 'bg-warning animate-pulse' : 'bg-destructive'
-                        }`} />
-                        <span className={`text-sm font-medium ${
-                          invoice.status === 'Paid' ? 'text-success' :
-                          invoice.status === 'Pending' ? 'text-warning' : 'text-destructive'
-                        }`}>
-                          {invoice.status}
-                        </span>
-                      </div>
+                      <p className="font-bold text-lg">
+                        ${invoice.amount.toLocaleString()}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -225,7 +209,10 @@ export default function Dashboard() {
           <CardContent className="p-6">
             <div className="space-y-3">
               <Link to="/create-invoice" className="block group">
-                <Button variant="outline" className="w-full justify-start h-12 shadow-sm hover:shadow-md transition-all hover:scale-105 group-hover:bg-primary/5">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start h-12 shadow-sm hover:shadow-md transition-all hover:scale-105 group-hover:bg-primary/5"
+                >
                   <div className="p-1 bg-primary/10 rounded mr-3">
                     <Plus className="h-4 w-4 text-primary" />
                   </div>
@@ -233,7 +220,10 @@ export default function Dashboard() {
                 </Button>
               </Link>
               <Link to="/clients" className="block group">
-                <Button variant="outline" className="w-full justify-start h-12 shadow-sm hover:shadow-md transition-all hover:scale-105 group-hover:bg-info/5">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start h-12 shadow-sm hover:shadow-md transition-all hover:scale-105 group-hover:bg-info/5"
+                >
                   <div className="p-1 bg-info/10 rounded mr-3">
                     <Users className="h-4 w-4 text-info" />
                   </div>
@@ -241,7 +231,10 @@ export default function Dashboard() {
                 </Button>
               </Link>
               <Link to="/templates" className="block group">
-                <Button variant="outline" className="w-full justify-start h-12 shadow-sm hover:shadow-md transition-all hover:scale-105 group-hover:bg-success/5">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start h-12 shadow-sm hover:shadow-md transition-all hover:scale-105 group-hover:bg-success/5"
+                >
                   <div className="p-1 bg-success/10 rounded mr-3">
                     <Download className="h-4 w-4 text-success" />
                   </div>
@@ -249,7 +242,10 @@ export default function Dashboard() {
                 </Button>
               </Link>
               <Link to="/profile" className="block group">
-                <Button variant="outline" className="w-full justify-start h-12 shadow-sm hover:shadow-md transition-all hover:scale-105 group-hover:bg-warning/5">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start h-12 shadow-sm hover:shadow-md transition-all hover:scale-105 group-hover:bg-warning/5"
+                >
                   <div className="p-1 bg-warning/10 rounded mr-3">
                     <User className="h-4 w-4 text-warning" />
                   </div>
@@ -264,12 +260,17 @@ export default function Dashboard() {
                 <div className="w-6 h-6 bg-primary-gradient rounded-full flex items-center justify-center">
                   <span className="text-white text-xs font-bold">AI</span>
                 </div>
-                <span className="font-semibold text-foreground">AI Features</span>
+                <span className="font-semibold text-foreground">
+                  AI Features
+                </span>
               </div>
               <p className="text-xs text-muted-foreground mb-3">
                 Generate invoices automatically with AI assistance
               </p>
-              <Button size="sm" className="w-full bg-primary-gradient hover:shadow-md transition-shadow">
+              <Button
+                size="sm"
+                className="w-full bg-primary-gradient hover:shadow-md transition-shadow"
+              >
                 Try AI Generation
               </Button>
             </div>
