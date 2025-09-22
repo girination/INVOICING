@@ -6,6 +6,7 @@ import { Bell, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
 import ProfileSetupModal from "@/components/ProfileSetupModal";
 
 // Helper function to get page title based on current route
@@ -25,15 +26,22 @@ const getPageTitle = (pathname: string) => {
 export const DashboardLayout = () => {
   const location = useLocation();
   const currentPageTitle = getPageTitle(location.pathname);
-  const { user, hasProfile, profileLoading } = useAuth();
+  const { user } = useAuth();
+  const { hasCompleteProfile, profileLoading } = useProfile(user?.id || null);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
-  // Show profile modal when user is authenticated but doesn't have a profile
+  // Show profile modal when user is authenticated but doesn't have a complete profile
   useEffect(() => {
-    if (user && !hasProfile && !profileLoading) {
-      setShowProfileModal(true);
+    // Only make decisions after profile loading is complete
+    if (!profileLoading) {
+      if (user && !hasCompleteProfile) {
+        setShowProfileModal(true);
+      } else if (user && hasCompleteProfile) {
+        // Close modal if profile becomes complete
+        setShowProfileModal(false);
+      }
     }
-  }, [user, hasProfile, profileLoading]);
+  }, [user, hasCompleteProfile, profileLoading]);
 
   // No need for handleProfileCreated since modal just navigates to profile page
 

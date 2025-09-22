@@ -39,7 +39,7 @@ export class ProfileService {
         .from("user_profiles")
         .select("*")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         ErrorService.logError("ProfileService.getProfile", error);
@@ -86,7 +86,7 @@ export class ProfileService {
           }
         )
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
         ErrorService.logError("ProfileService.upsertProfile", error);
@@ -128,7 +128,7 @@ export class ProfileService {
         })
         .eq("user_id", userId)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
         ErrorService.logError("ProfileService.updateProfile", error);
@@ -196,8 +196,8 @@ export class ProfileService {
   ): Promise<ProfileServiceResponse> {
     try {
       const fileExt = file.name.split(".").pop();
-      const fileName = `${userId}-logo.${fileExt}`;
-      const filePath = `profiles/${fileName}`;
+      const fileName = `logo.${fileExt}`;
+      const filePath = `${userId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from("profile-images")
@@ -218,6 +218,32 @@ export class ProfileService {
       const {
         data: { publicUrl },
       } = supabase.storage.from("profile-images").getPublicUrl(filePath);
+
+      // Update the user profile with the logo URL
+      const { error: updateError } = await supabase
+        .from("user_profiles")
+        .upsert(
+          {
+            user_id: userId,
+            logo_url: publicUrl,
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: "user_id",
+          }
+        );
+
+      if (updateError) {
+        ErrorService.logError(
+          "ProfileService.uploadLogo - update profile",
+          updateError
+        );
+        // Still return success for upload, but log the profile update error
+        console.warn(
+          "Logo uploaded but failed to update profile:",
+          updateError.message
+        );
+      }
 
       return {
         success: true,

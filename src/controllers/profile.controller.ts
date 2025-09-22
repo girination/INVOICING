@@ -248,6 +248,35 @@ export class ProfileController {
       }
     }
 
+    // Validate banking information - if any banking field is provided, all three are required
+    const hasBankName = data.bank_name && data.bank_name.trim() !== "";
+    const hasAccountNumber =
+      data.account_number && data.account_number.trim() !== "";
+    const hasSwiftCode = data.swift_code && data.swift_code.trim() !== "";
+    const hasAnyBankingInfo = hasBankName || hasAccountNumber || hasSwiftCode;
+
+    if (hasAnyBankingInfo) {
+      if (!hasBankName) {
+        errors.push({
+          field: "bank_name",
+          message: "Bank name is required when providing banking information",
+        });
+      }
+      if (!hasAccountNumber) {
+        errors.push({
+          field: "account_number",
+          message:
+            "Account number is required when providing banking information",
+        });
+      }
+      if (!hasSwiftCode) {
+        errors.push({
+          field: "swift_code",
+          message: "SWIFT code is required when providing banking information",
+        });
+      }
+    }
+
     // Validate SWIFT code if provided
     if (data.swift_code) {
       const swiftValidation = this.validateSwiftCode(data.swift_code);

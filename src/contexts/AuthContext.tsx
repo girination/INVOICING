@@ -46,14 +46,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
-      const response = await AuthController.getCurrentSession();
-      if (!response.success) {
-        console.error("Error getting session:", response.error);
-      } else {
-        setSession(response.data?.session || null);
-        setUser(response.data?.session?.user ?? null);
+      try {
+        const response = await AuthController.getCurrentSession();
+        if (!response.success) {
+          console.error("Error getting session:", response.error);
+        } else {
+          setSession(response.data?.session || null);
+          setUser(response.data?.session?.user ?? null);
+        }
+      } catch (error) {
+        console.error("Error in getInitialSession:", error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     getInitialSession();

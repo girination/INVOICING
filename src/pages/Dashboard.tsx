@@ -65,12 +65,6 @@ export default function Dashboard() {
           <p className="text-muted-foreground text-lg">
             Welcome back! Here's your business overview.
           </p>
-          <div className="flex items-center gap-2 mt-4">
-            <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
-            <span className="text-sm text-muted-foreground">
-              Last updated: Just now
-            </span>
-          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">

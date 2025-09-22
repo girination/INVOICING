@@ -17,6 +17,7 @@ import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProfileController } from "@/controllers/profile.controller";
 import { UserProfile } from "@/services/profile.service";
+import { useProfile } from "@/hooks/useProfile";
 import * as currencyCodes from "currency-codes";
 import currencySymbolMap from "currency-symbol-map";
 
@@ -76,6 +77,7 @@ const CURRENCIES = [
 
 export default function Profile() {
   const { user } = useAuth();
+  const { refreshProfile } = useProfile(user?.id || null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -86,6 +88,7 @@ export default function Profile() {
     phone: "",
     website: "",
     address: "",
+    logoUrl: "",
 
     // Invoice Settings
     defaultCurrency: "USD",
@@ -115,6 +118,7 @@ export default function Profile() {
             phone: response.data.phone || "",
             website: response.data.website || "",
             address: response.data.address || "",
+            logoUrl: response.data.logo_url || "",
             defaultCurrency: response.data.default_currency || "USD",
             defaultTaxRate: response.data.default_tax_rate || 10,
             defaultPaymentTerms: response.data.default_payment_terms || 30,
@@ -124,6 +128,11 @@ export default function Profile() {
             swiftCode: response.data.swift_code || "",
             iban: response.data.iban || "",
           });
+
+          // Set logo preview if logo exists
+          if (response.data.logo_url) {
+            setLogoPreview(response.data.logo_url);
+          }
         }
       } catch (error) {
         console.error("Error loading profile:", error);
@@ -157,7 +166,12 @@ export default function Profile() {
       try {
         const response = await ProfileController.uploadLogo(user.id, file);
         if (response.success) {
-          setLogoPreview(response.data?.logo_url || null);
+          const logoUrl = response.data?.logo_url || null;
+          setLogoPreview(logoUrl);
+          setProfileData((prev) => ({
+            ...prev,
+            logoUrl: logoUrl || "",
+          }));
           toast({
             title: "Success",
             description: "Logo uploaded successfully",
@@ -188,6 +202,12 @@ export default function Profile() {
     }));
   };
 
+  // Check if any banking information is entered to determine if all banking fields are required
+  const hasAnyBankingInfo =
+    (profileData.bankName && profileData.bankName.trim() !== "") ||
+    (profileData.accountNumber && profileData.accountNumber.trim() !== "") ||
+    (profileData.swiftCode && profileData.swiftCode.trim() !== "");
+
   const handleSaveProfile = async () => {
     if (!user?.id) return;
 
@@ -199,6 +219,7 @@ export default function Profile() {
         phone: profileData.phone,
         website: profileData.website,
         address: profileData.address,
+        logo_url: profileData.logoUrl,
         default_currency: profileData.defaultCurrency,
         default_tax_rate: profileData.defaultTaxRate,
         default_payment_terms: profileData.defaultPaymentTerms,
@@ -214,6 +235,8 @@ export default function Profile() {
           title: "Success",
           description: "Profile saved successfully",
         });
+        // Refresh the profile data in the useProfile hook
+        await refreshProfile();
       } else {
         if (response.errors && response.errors.length > 0) {
           const firstError = response.errors[0];
@@ -330,11 +353,17 @@ export default function Profile() {
                 <Building2 className="h-5 w-5 text-primary" />
                 Business Information
               </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Fields marked with <span className="text-red-500">*</span> are
+                required
+              </p>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="businessName">Business Name</Label>
+                  <Label htmlFor="businessName">
+                    Business Name <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="businessName"
                     value={profileData.businessName}
@@ -346,7 +375,9 @@ export default function Profile() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Business Email</Label>
+                  <Label htmlFor="email">
+                    Business Email <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="email"
                     type="email"
@@ -357,7 +388,9 @@ export default function Profile() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone">
+                    Phone Number <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="phone"
                     value={profileData.phone}
@@ -380,7 +413,9 @@ export default function Profile() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="address">Business Address</Label>
+                <Label htmlFor="address">
+                  Business Address <span className="text-red-500">*</span>
+                </Label>
                 <Textarea
                   id="address"
                   value={profileData.address}
@@ -401,6 +436,9 @@ export default function Profile() {
             <User className="h-5 w-5 text-primary" />
             Invoice Settings
           </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            These settings have default values and can be customized
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -478,10 +516,16 @@ export default function Profile() {
       {/* Banking Information */}
       <Card className="shadow-soft">
         <CardHeader>
-          <CardTitle>Banking Information (Optional)</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            Banking Information
+            <span className="text-sm font-normal text-muted-foreground">
+              (Optional)
+            </span>
+          </CardTitle>
           <p className="text-sm text-muted-foreground">
             This information will be included in your invoices for international
-            client payments.
+            client payments. If you provide any banking information, all three
+            fields (bank name, account number, and SWIFT code) become required.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -497,7 +541,10 @@ export default function Profile() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="accountNumber">Account Number</Label>
+              <Label htmlFor="accountNumber">
+                Account Number
+                {hasAnyBankingInfo && <span className="text-red-500"> *</span>}
+              </Label>
               <Input
                 id="accountNumber"
                 value={profileData.accountNumber}
@@ -506,10 +553,18 @@ export default function Profile() {
                 }
                 placeholder="1234567890"
               />
+              {hasAnyBankingInfo && (
+                <p className="text-xs text-red-600 dark:text-red-400">
+                  Required when providing banking information
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="swiftCode">SWIFT Code</Label>
+              <Label htmlFor="swiftCode">
+                SWIFT Code
+                {hasAnyBankingInfo && <span className="text-red-500"> *</span>}
+              </Label>
               <Input
                 id="swiftCode"
                 value={profileData.swiftCode}
@@ -520,6 +575,11 @@ export default function Profile() {
               <p className="text-xs text-muted-foreground">
                 8-11 character code for international wire transfers
               </p>
+              {hasAnyBankingInfo && (
+                <p className="text-xs text-red-600 dark:text-red-400">
+                  Required when providing banking information
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
