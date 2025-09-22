@@ -290,15 +290,29 @@ export class TemplateService {
       }`;
 
       if (format === "pdf") {
-        // Generate real PDF using PDFGeneratorService
-        const sampleData = PDFGeneratorService.generateSampleData(templateId);
-        const pdf = PDFGeneratorService.generateInvoicePDF(
-          templateData,
-          sampleData
-        );
+        try {
+          // Generate real PDF using HTML-to-PDF conversion (matches preview exactly)
+          const sampleData = PDFGeneratorService.generateSampleData(templateId);
+          const pdf = await PDFGeneratorService.generateInvoicePDFFromHTML(
+            templateData,
+            sampleData
+          );
 
-        // Download the PDF
-        pdf.save(fileName);
+          // Download the PDF
+          pdf.save(fileName);
+        } catch (error) {
+          console.warn(
+            "HTML-to-PDF conversion failed, falling back to jsPDF:",
+            error
+          );
+          // Fallback to original jsPDF method
+          const sampleData = PDFGeneratorService.generateSampleData(templateId);
+          const pdf = PDFGeneratorService.generateInvoicePDF(
+            templateData,
+            sampleData
+          );
+          pdf.save(fileName);
+        }
       } else {
         // For Word and Excel, create placeholder files for now
         // TODO: Implement real Word/Excel generation
