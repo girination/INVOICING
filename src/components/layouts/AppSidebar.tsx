@@ -147,23 +147,6 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         </div>
-
-        {/* Light themed footer */}
-        {state !== "collapsed" && (
-          <div className="mt-auto p-4 border-t border-sidebar-border/30 bg-gradient-to-r from-primary/5 to-transparent">
-            <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
-                <span className="text-xs text-sidebar-foreground/80 font-medium">
-                  System Status
-                </span>
-              </div>
-              <p className="text-xs text-sidebar-foreground/60">
-                All systems operational
-              </p>
-            </div>
-          </div>
-        )}
       </SidebarContent>
     </Sidebar>
   );
