@@ -1,59 +1,74 @@
-import React, { useState, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Plus, Trash2, Upload, Sparkles } from 'lucide-react';
-import { InvoiceData, LineItem, currencies } from '@/types/invoice';
-import { toast } from '@/hooks/use-toast';
+import React, { useState, useCallback, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Plus, Trash2, Upload, Sparkles, UserPlus } from "lucide-react";
+import { InvoiceData, LineItem, currencies } from "@/types/invoice";
+import { toast } from "@/hooks/use-toast";
+import { ClientService, Client } from "@/services/client.service";
 
 interface InvoiceFormProps {
   invoiceData: InvoiceData;
   onUpdateInvoiceData: (data: InvoiceData) => void;
+  userId?: string | null;
 }
 
 export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   invoiceData,
   onUpdateInvoiceData,
+  userId,
 }) => {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [clients, setClients] = useState<Client[]>([]);
+  const [clientsLoading, setClientsLoading] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState<string>("");
 
-  const handleLogoUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "Please upload an image smaller than 2MB",
-          variant: "destructive",
+  const handleLogoUpload = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file) {
+        if (file.size > 2 * 1024 * 1024) {
+          toast({
+            title: "File too large",
+            description: "Please upload an image smaller than 2MB",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setLogoPreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+
+        onUpdateInvoiceData({
+          ...invoiceData,
+          businessInfo: {
+            ...invoiceData.businessInfo,
+            logo: file,
+          },
         });
-        return;
       }
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setLogoPreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-
-      onUpdateInvoiceData({
-        ...invoiceData,
-        businessInfo: {
-          ...invoiceData.businessInfo,
-          logo: file,
-        },
-      });
-    }
-  }, [invoiceData, onUpdateInvoiceData]);
+    },
+    [invoiceData, onUpdateInvoiceData]
+  );
 
   const addLineItem = useCallback(() => {
     const newItem: LineItem = {
       id: Date.now().toString(),
-      description: '',
+      description: "",
       quantity: 1,
       rate: 0,
       amount: 0,
@@ -65,38 +80,101 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
     });
   }, [invoiceData, onUpdateInvoiceData]);
 
-  const updateLineItem = useCallback((id: string, field: keyof LineItem, value: string | number) => {
-    const updatedItems = invoiceData.lineItems.map((item) => {
-      if (item.id === id) {
-        const updatedItem = { ...item, [field]: value };
-        if (field === 'quantity' || field === 'rate') {
-          updatedItem.amount = updatedItem.quantity * updatedItem.rate;
+  const updateLineItem = useCallback(
+    (id: string, field: keyof LineItem, value: string | number) => {
+      const updatedItems = invoiceData.lineItems.map((item) => {
+        if (item.id === id) {
+          const updatedItem = { ...item, [field]: value };
+          if (field === "quantity" || field === "rate") {
+            updatedItem.amount = updatedItem.quantity * updatedItem.rate;
+          }
+          return updatedItem;
         }
-        return updatedItem;
+        return item;
+      });
+
+      onUpdateInvoiceData({
+        ...invoiceData,
+        lineItems: updatedItems,
+      });
+    },
+    [invoiceData, onUpdateInvoiceData]
+  );
+
+  const removeLineItem = useCallback(
+    (id: string) => {
+      const updatedItems = invoiceData.lineItems.filter(
+        (item) => item.id !== id
+      );
+      onUpdateInvoiceData({
+        ...invoiceData,
+        lineItems: updatedItems,
+      });
+    },
+    [invoiceData, onUpdateInvoiceData]
+  );
+
+  const selectedCurrency = currencies.find(
+    (c) => c.code === invoiceData.currency
+  );
+
+  // Fetch clients when component mounts or userId changes
+  useEffect(() => {
+    const fetchClients = async () => {
+      if (!userId) return;
+
+      setClientsLoading(true);
+      try {
+        const response = await ClientService.getClients(userId);
+        if (response.success && Array.isArray(response.data)) {
+          setClients(response.data);
+        } else {
+          toast({
+            title: "Error",
+            description: response.message,
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching clients:", error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch clients",
+          variant: "destructive",
+        });
+      } finally {
+        setClientsLoading(false);
       }
-      return item;
-    });
+    };
 
-    onUpdateInvoiceData({
-      ...invoiceData,
-      lineItems: updatedItems,
-    });
-  }, [invoiceData, onUpdateInvoiceData]);
+    fetchClients();
+  }, [userId]);
 
-  const removeLineItem = useCallback((id: string) => {
-    const updatedItems = invoiceData.lineItems.filter((item) => item.id !== id);
-    onUpdateInvoiceData({
-      ...invoiceData,
-      lineItems: updatedItems,
-    });
-  }, [invoiceData, onUpdateInvoiceData]);
+  // Handle client selection
+  const handleClientSelect = useCallback(
+    (clientId: string) => {
+      setSelectedClientId(clientId);
+      const selectedClient = clients.find((client) => client.id === clientId);
 
-  const selectedCurrency = currencies.find(c => c.code === invoiceData.currency);
+      if (selectedClient) {
+        onUpdateInvoiceData({
+          ...invoiceData,
+          clientInfo: {
+            name: selectedClient.name,
+            email: selectedClient.email,
+            address: selectedClient.address || "",
+          },
+        });
+      }
+    },
+    [clients, invoiceData, onUpdateInvoiceData]
+  );
 
   const handleAIGenerate = () => {
     toast({
       title: "Coming Soon!",
-      description: "AI invoice generation will be available once you connect to Supabase.",
+      description:
+        "AI invoice generation will be available once you connect to Supabase.",
       variant: "default",
     });
   };
@@ -122,7 +200,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
               className="min-h-[100px]"
             />
           </div>
-          <Button 
+          <Button
             onClick={handleAIGenerate}
             disabled={!aiPrompt.trim()}
             className="w-full bg-primary-gradient hover:opacity-90 transition-opacity"
@@ -145,7 +223,9 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
       {/* Business Information */}
       <Card className="shadow-soft">
         <CardHeader>
-          <CardTitle className="text-lg font-semibold">Business Information</CardTitle>
+          <CardTitle className="text-lg font-semibold">
+            Business Information
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -162,7 +242,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => document.getElementById('logo')?.click()}
+                  onClick={() => document.getElementById("logo")?.click()}
                   className="flex items-center gap-2"
                 >
                   <Upload className="h-4 w-4" />
@@ -262,9 +342,107 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
       {/* Client Information */}
       <Card className="shadow-soft">
         <CardHeader>
-          <CardTitle className="text-lg font-semibold">Client Information</CardTitle>
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+            Client Information
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => window.open("/app/clients", "_blank")}
+              className="text-primary hover:text-primary/80"
+            >
+              <UserPlus className="h-4 w-4 mr-1" />
+              Manage Clients
+            </Button>
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="clientSelect">Select Client</Label>
+            <Select
+              value={selectedClientId}
+              onValueChange={handleClientSelect}
+              disabled={clientsLoading}
+            >
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={
+                    clientsLoading
+                      ? "Loading clients..."
+                      : clients.length === 0
+                      ? "No clients found. Add clients first."
+                      : "Choose a client"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {clients.map((client) => (
+                  <SelectItem key={client.id} value={client.id!}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{client.name}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {client.email}
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {clients.length === 0 && !clientsLoading && (
+              <p className="text-sm text-muted-foreground">
+                No clients found.{" "}
+                <Button
+                  variant="link"
+                  size="sm"
+                  onClick={() => window.open("/app/clients", "_blank")}
+                  className="p-0 h-auto text-primary"
+                >
+                  Add your first client
+                </Button>
+              </p>
+            )}
+          </div>
+
+          {/* Display selected client info */}
+          {selectedClientId && (
+            <div className="bg-muted/30 p-4 rounded-lg space-y-2">
+              <h4 className="font-medium text-sm text-muted-foreground">
+                Selected Client Details
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs text-muted-foreground">Name</Label>
+                  <p className="text-sm font-medium">
+                    {invoiceData.clientInfo.name}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Email</Label>
+                  <p className="text-sm">{invoiceData.clientInfo.email}</p>
+                </div>
+                <div className="md:col-span-2">
+                  <Label className="text-xs text-muted-foreground">
+                    Address
+                  </Label>
+                  <p className="text-sm whitespace-pre-line">
+                    {invoiceData.clientInfo.address}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Manual client entry option */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Separator className="flex-1" />
+              <span className="text-xs text-muted-foreground">OR</span>
+              <Separator className="flex-1" />
+            </div>
+            <p className="text-sm text-muted-foreground text-center">
+              Don't see your client? You can still enter details manually below
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="clientName">Client Name</Label>
@@ -328,7 +506,9 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
       {/* Invoice Details */}
       <Card className="shadow-soft">
         <CardHeader>
-          <CardTitle className="text-lg font-semibold">Invoice Details</CardTitle>
+          <CardTitle className="text-lg font-semibold">
+            Invoice Details
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -429,7 +609,9 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                     <Label>Description</Label>
                     <Textarea
                       value={item.description}
-                      onChange={(e) => updateLineItem(item.id, 'description', e.target.value)}
+                      onChange={(e) =>
+                        updateLineItem(item.id, "description", e.target.value)
+                      }
                       placeholder="Service or product description"
                       className="min-h-[60px]"
                     />
@@ -442,7 +624,13 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                       min="0"
                       step="0.01"
                       value={item.quantity}
-                      onChange={(e) => updateLineItem(item.id, 'quantity', parseFloat(e.target.value) || 0)}
+                      onChange={(e) =>
+                        updateLineItem(
+                          item.id,
+                          "quantity",
+                          parseFloat(e.target.value) || 0
+                        )
+                      }
                     />
                   </div>
 
@@ -453,14 +641,21 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                       min="0"
                       step="0.01"
                       value={item.rate}
-                      onChange={(e) => updateLineItem(item.id, 'rate', parseFloat(e.target.value) || 0)}
+                      onChange={(e) =>
+                        updateLineItem(
+                          item.id,
+                          "rate",
+                          parseFloat(e.target.value) || 0
+                        )
+                      }
                     />
                   </div>
 
                   <div className="md:col-span-2 space-y-2">
                     <Label>Amount</Label>
                     <div className="h-9 px-3 py-2 bg-muted rounded-md flex items-center text-sm">
-                      {selectedCurrency?.symbol}{item.amount.toFixed(2)}
+                      {selectedCurrency?.symbol}
+                      {item.amount.toFixed(2)}
                     </div>
                   </div>
 
@@ -484,7 +679,9 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
       {/* Tax & Discount */}
       <Card className="shadow-soft">
         <CardHeader>
-          <CardTitle className="text-lg font-semibold">Tax & Discount</CardTitle>
+          <CardTitle className="text-lg font-semibold">
+            Tax & Discount
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -9,6 +9,8 @@ import { InvoiceData, currencies } from "@/types/invoice";
 import { InvoiceTemplate } from "@/types/templates";
 import { generatePDF } from "@/utils/pdfGenerator";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
 
 const CreateInvoice = () => {
   const [showPreview, setShowPreview] = useState(true);
@@ -17,6 +19,12 @@ const CreateInvoice = () => {
     InvoiceTemplate.MODERN
   );
   const invoicePreviewRef = useRef<HTMLDivElement>(null);
+
+  // Get user and profile data
+  const { user } = useAuth();
+  const { profile, profileLoading, refreshProfile } = useProfile(
+    user?.id || null
+  );
 
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
     invoiceNumber: "INV-001",
@@ -85,6 +93,57 @@ const CreateInvoice = () => {
     calculateTotals,
   ]);
 
+  // Prefill business information from user profile (only if fields are empty)
+  useEffect(() => {
+    if (profile && !profileLoading) {
+      setInvoiceData((prevData) => {
+        // Only prefill if the current business info is empty
+        const hasExistingData =
+          prevData.businessInfo.name ||
+          prevData.businessInfo.email ||
+          prevData.businessInfo.phone ||
+          prevData.businessInfo.address;
+
+        if (hasExistingData) {
+          return prevData; // Don't overwrite existing data
+        }
+
+        return {
+          ...prevData,
+          businessInfo: {
+            ...prevData.businessInfo,
+            name: profile.business_name || prevData.businessInfo.name,
+            email: profile.email || prevData.businessInfo.email,
+            phone: profile.phone || prevData.businessInfo.phone,
+            address: profile.address || prevData.businessInfo.address,
+            logo: profile.logo_url || prevData.businessInfo.logo,
+          },
+        };
+      });
+    }
+  }, [profile, profileLoading]);
+
+  // Function to manually prefill from profile
+  const handlePrefillFromProfile = () => {
+    if (profile) {
+      setInvoiceData((prevData) => ({
+        ...prevData,
+        businessInfo: {
+          ...prevData.businessInfo,
+          name: profile.business_name || prevData.businessInfo.name,
+          email: profile.email || prevData.businessInfo.email,
+          phone: profile.phone || prevData.businessInfo.phone,
+          address: profile.address || prevData.businessInfo.address,
+          logo: profile.logo_url || prevData.businessInfo.logo,
+        },
+      }));
+      toast({
+        title: "Success!",
+        description: "Business information updated from your profile.",
+      });
+    }
+  };
+
   const handleGeneratePDF = async () => {
     if (!invoicePreviewRef.current) {
       toast({
@@ -137,6 +196,26 @@ const CreateInvoice = () => {
           <p className="text-muted-foreground mt-1">
             Create professional invoices in minutes
           </p>
+          {profileLoading && (
+            <p className="text-sm text-blue-600 mt-2">
+              Loading your business profile...
+            </p>
+          )}
+          {profile && !profileLoading && (
+            <div className="flex items-center gap-2 mt-2">
+              <p className="text-sm text-green-600">
+                ✓ Business information prefilled from your profile
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handlePrefillFromProfile}
+                className="text-xs h-6 px-2"
+              >
+                Refresh
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-3">
@@ -191,6 +270,7 @@ const CreateInvoice = () => {
           <InvoiceForm
             invoiceData={invoiceData}
             onUpdateInvoiceData={handleUpdateInvoiceData}
+            userId={user?.id}
           />
 
           {/* Template Selector */}

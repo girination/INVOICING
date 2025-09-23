@@ -11,7 +11,7 @@ export interface BusinessInfo {
   email: string;
   phone: string;
   address: string;
-  logo?: File | null;
+  logo?: File | string | null;
 }
 
 export interface ClientInfo {
@@ -38,10 +38,10 @@ export interface InvoiceData {
 }
 
 export const currencies = [
-  { code: 'USD', symbol: '$', name: 'US Dollar' },
-  { code: 'EUR', symbol: '€', name: 'Euro' },
-  { code: 'GBP', symbol: '£', name: 'British Pound' },
-  { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
-  { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
-  { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
+  { code: "USD", symbol: "$", name: "US Dollar" },
+  { code: "EUR", symbol: "€", name: "Euro" },
+  { code: "GBP", symbol: "£", name: "British Pound" },
+  { code: "CAD", symbol: "C$", name: "Canadian Dollar" },
+  { code: "AUD", symbol: "A$", name: "Australian Dollar" },
+  { code: "JPY", symbol: "¥", name: "Japanese Yen" },
 ];

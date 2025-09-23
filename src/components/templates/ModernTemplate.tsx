@@ -1,7 +1,7 @@
-import React, { forwardRef } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { InvoiceData, currencies } from '@/types/invoice';
+import React, { forwardRef } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { InvoiceData, currencies } from "@/types/invoice";
 
 interface ModernTemplateProps {
   invoiceData: InvoiceData;
@@ -9,15 +9,17 @@ interface ModernTemplateProps {
 
 export const ModernTemplate = forwardRef<HTMLDivElement, ModernTemplateProps>(
   ({ invoiceData }, ref) => {
-    const selectedCurrency = currencies.find(c => c.code === invoiceData.currency);
-    const currencySymbol = selectedCurrency?.symbol || '$';
+    const selectedCurrency = currencies.find(
+      (c) => c.code === invoiceData.currency
+    );
+    const currencySymbol = selectedCurrency?.symbol || "$";
 
     const formatDate = (dateString: string) => {
-      if (!dateString) return '';
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
+      if (!dateString) return "";
+      return new Date(dateString).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       });
     };
 
@@ -34,23 +36,35 @@ export const ModernTemplate = forwardRef<HTMLDivElement, ModernTemplateProps>(
               {invoiceData.businessInfo.logo && (
                 <div className="w-32 h-16 mb-4">
                   <img
-                    src={URL.createObjectURL(invoiceData.businessInfo.logo)}
+                    src={
+                      typeof invoiceData.businessInfo.logo === "string"
+                        ? invoiceData.businessInfo.logo
+                        : URL.createObjectURL(invoiceData.businessInfo.logo)
+                    }
                     alt="Business logo"
                     className="w-full h-full object-contain"
                   />
                 </div>
               )}
               <h1 className="text-3xl font-bold text-primary">INVOICE</h1>
-              <p className="text-muted-foreground">#{invoiceData.invoiceNumber}</p>
+              <p className="text-muted-foreground">
+                #{invoiceData.invoiceNumber}
+              </p>
             </div>
-            
+
             <div className="text-right space-y-1">
-              <h2 className="text-xl font-semibold">{invoiceData.businessInfo.name}</h2>
+              <h2 className="text-xl font-semibold">
+                {invoiceData.businessInfo.name}
+              </h2>
               {invoiceData.businessInfo.email && (
-                <p className="text-sm text-muted-foreground">{invoiceData.businessInfo.email}</p>
+                <p className="text-sm text-muted-foreground">
+                  {invoiceData.businessInfo.email}
+                </p>
               )}
               {invoiceData.businessInfo.phone && (
-                <p className="text-sm text-muted-foreground">{invoiceData.businessInfo.phone}</p>
+                <p className="text-sm text-muted-foreground">
+                  {invoiceData.businessInfo.phone}
+                </p>
               )}
               {invoiceData.businessInfo.address && (
                 <div className="text-sm text-muted-foreground whitespace-pre-line">
@@ -68,7 +82,9 @@ export const ModernTemplate = forwardRef<HTMLDivElement, ModernTemplateProps>(
                 <div className="space-y-1">
                   <p className="font-medium">{invoiceData.clientInfo.name}</p>
                   {invoiceData.clientInfo.email && (
-                    <p className="text-sm text-muted-foreground">{invoiceData.clientInfo.email}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {invoiceData.clientInfo.email}
+                    </p>
                   )}
                   {invoiceData.clientInfo.address && (
                     <div className="text-sm text-muted-foreground whitespace-pre-line">
@@ -101,7 +117,7 @@ export const ModernTemplate = forwardRef<HTMLDivElement, ModernTemplateProps>(
           {invoiceData.lineItems.length > 0 && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Items</h3>
-              
+
               <div className="overflow-hidden rounded-lg border">
                 <table className="w-full">
                   <thead className="bg-muted">
@@ -114,13 +130,24 @@ export const ModernTemplate = forwardRef<HTMLDivElement, ModernTemplateProps>(
                   </thead>
                   <tbody>
                     {invoiceData.lineItems.map((item, index) => (
-                      <tr key={item.id} className={index % 2 === 0 ? 'bg-background' : 'bg-muted/30'}>
+                      <tr
+                        key={item.id}
+                        className={
+                          index % 2 === 0 ? "bg-background" : "bg-muted/30"
+                        }
+                      >
                         <td className="p-4">
-                          <div className="whitespace-pre-line">{item.description}</div>
+                          <div className="whitespace-pre-line">
+                            {item.description}
+                          </div>
                         </td>
                         <td className="text-right p-4">{item.quantity}</td>
-                        <td className="text-right p-4">{formatCurrency(item.rate)}</td>
-                        <td className="text-right p-4 font-medium">{formatCurrency(item.amount)}</td>
+                        <td className="text-right p-4">
+                          {formatCurrency(item.rate)}
+                        </td>
+                        <td className="text-right p-4 font-medium">
+                          {formatCurrency(item.amount)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -134,25 +161,27 @@ export const ModernTemplate = forwardRef<HTMLDivElement, ModernTemplateProps>(
                     <span>Subtotal:</span>
                     <span>{formatCurrency(invoiceData.subtotal)}</span>
                   </div>
-                  
+
                   {invoiceData.discountRate > 0 && (
                     <div className="flex justify-between text-success">
                       <span>Discount ({invoiceData.discountRate}%):</span>
                       <span>-{formatCurrency(invoiceData.discountAmount)}</span>
                     </div>
                   )}
-                  
+
                   {invoiceData.taxRate > 0 && (
                     <div className="flex justify-between">
                       <span>Tax ({invoiceData.taxRate}%):</span>
                       <span>{formatCurrency(invoiceData.taxAmount)}</span>
                     </div>
                   )}
-                  
+
                   <Separator />
                   <div className="flex justify-between text-lg font-semibold">
                     <span>Total:</span>
-                    <span className="text-primary">{formatCurrency(invoiceData.total)}</span>
+                    <span className="text-primary">
+                      {formatCurrency(invoiceData.total)}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -181,4 +210,4 @@ export const ModernTemplate = forwardRef<HTMLDivElement, ModernTemplateProps>(
   }
 );
 
-ModernTemplate.displayName = 'ModernTemplate';
+ModernTemplate.displayName = "ModernTemplate";
