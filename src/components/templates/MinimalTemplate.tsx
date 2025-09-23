@@ -193,6 +193,47 @@ export const MinimalTemplate = forwardRef<HTMLDivElement, MinimalTemplateProps>(
           </div>
         )}
 
+        {/* Banking Information */}
+        {invoiceData.bankingInfo.bankName && (
+          <div className="border-t border-gray-200 pt-8 space-y-3">
+            <div className="text-xs uppercase tracking-wider text-gray-400">
+              Banking Information
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-medium text-gray-600">Bank:</span>
+                <p className="font-medium text-gray-900">
+                  {invoiceData.bankingInfo.bankName}
+                </p>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">
+                  Account Number:
+                </span>
+                <p className="font-medium text-gray-900">
+                  {invoiceData.bankingInfo.accountNumber}
+                </p>
+              </div>
+              {invoiceData.bankingInfo.swiftCode && (
+                <div>
+                  <span className="font-medium text-gray-600">SWIFT Code:</span>
+                  <p className="font-medium text-gray-900">
+                    {invoiceData.bankingInfo.swiftCode}
+                  </p>
+                </div>
+              )}
+              {invoiceData.bankingInfo.iban && (
+                <div>
+                  <span className="font-medium text-gray-600">IBAN:</span>
+                  <p className="font-medium text-gray-900">
+                    {invoiceData.bankingInfo.iban}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Notes */}
         {invoiceData.notes && (
           <div className="border-t border-gray-200 pt-8 space-y-3">

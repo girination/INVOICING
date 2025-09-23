@@ -20,6 +20,13 @@ export interface ClientInfo {
   address: string;
 }
 
+export interface BankingInfo {
+  bankName: string;
+  accountNumber: string;
+  swiftCode: string;
+  iban: string;
+}
+
 export interface InvoiceData {
   invoiceNumber: string;
   date: string;
@@ -27,6 +34,7 @@ export interface InvoiceData {
   currency: string;
   businessInfo: BusinessInfo;
   clientInfo: ClientInfo;
+  bankingInfo: BankingInfo;
   lineItems: LineItem[];
   taxRate: number;
   discountRate: number;
@@ -37,11 +45,59 @@ export interface InvoiceData {
   total: number;
 }
 
+import * as currencyCodes from "currency-codes";
+import currencySymbolMap from "currency-symbol-map";
+
+// Get all currencies from the package and sort them with popular ones first
+const POPULAR_CURRENCIES = [
+  "USD",
+  "EUR",
+  "GBP",
+  "JPY",
+  "AUD",
+  "CAD",
+  "CHF",
+  "CNY",
+  "SEK",
+  "NZD",
+  "MXN",
+  "SGD",
+  "HKD",
+  "NOK",
+  "TRY",
+  "RUB",
+  "INR",
+  "BRL",
+  "ZAR",
+  "KRW",
+];
+
 export const currencies = [
-  { code: "USD", symbol: "$", name: "US Dollar" },
-  { code: "EUR", symbol: "€", name: "Euro" },
-  { code: "GBP", symbol: "£", name: "British Pound" },
-  { code: "CAD", symbol: "C$", name: "Canadian Dollar" },
-  { code: "AUD", symbol: "A$", name: "Australian Dollar" },
-  { code: "JPY", symbol: "¥", name: "Japanese Yen" },
+  // Popular currencies first
+  ...POPULAR_CURRENCIES.map((code) => {
+    const currency = currencyCodes.code(code);
+    return currency
+      ? {
+          code: currency.code,
+          name: currency.currency,
+          symbol: currencySymbolMap(currency.code) || currency.code,
+        }
+      : null;
+  }).filter(Boolean),
+
+  // All other currencies
+  ...currencyCodes
+    .codes()
+    .filter((code) => !POPULAR_CURRENCIES.includes(code))
+    .map((code) => {
+      const currency = currencyCodes.code(code);
+      return currency
+        ? {
+            code: currency.code,
+            name: currency.currency,
+            symbol: currencySymbolMap(currency.code) || currency.code,
+          }
+        : null;
+    })
+    .filter(Boolean),
 ];

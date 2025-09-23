@@ -198,6 +198,53 @@ export const ModernTemplate = forwardRef<HTMLDivElement, ModernTemplateProps>(
             </div>
           )}
 
+          {/* Banking Information */}
+          {invoiceData.bankingInfo.bankName && (
+            <div className="mt-8 pt-6 border-t">
+              <h3 className="text-lg font-semibold mb-4">
+                Banking Information
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-medium text-muted-foreground">
+                    Bank:
+                  </span>
+                  <p className="font-medium">
+                    {invoiceData.bankingInfo.bankName}
+                  </p>
+                </div>
+                <div>
+                  <span className="font-medium text-muted-foreground">
+                    Account Number:
+                  </span>
+                  <p className="font-medium">
+                    {invoiceData.bankingInfo.accountNumber}
+                  </p>
+                </div>
+                {invoiceData.bankingInfo.swiftCode && (
+                  <div>
+                    <span className="font-medium text-muted-foreground">
+                      SWIFT Code:
+                    </span>
+                    <p className="font-medium">
+                      {invoiceData.bankingInfo.swiftCode}
+                    </p>
+                  </div>
+                )}
+                {invoiceData.bankingInfo.iban && (
+                  <div>
+                    <span className="font-medium text-muted-foreground">
+                      IBAN:
+                    </span>
+                    <p className="font-medium">
+                      {invoiceData.bankingInfo.iban}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Footer */}
           <div className="text-center pt-8 border-t">
             <p className="text-sm text-muted-foreground">

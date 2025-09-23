@@ -16,17 +16,20 @@ import { Plus, Trash2, Upload, Sparkles, UserPlus } from "lucide-react";
 import { InvoiceData, LineItem, currencies } from "@/types/invoice";
 import { toast } from "@/hooks/use-toast";
 import { ClientService, Client } from "@/services/client.service";
+import { UserProfile } from "@/services/profile.service";
 
 interface InvoiceFormProps {
   invoiceData: InvoiceData;
   onUpdateInvoiceData: (data: InvoiceData) => void;
   userId?: string | null;
+  profile?: UserProfile | null;
 }
 
 export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   invoiceData,
   onUpdateInvoiceData,
   userId,
+  profile,
 }) => {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [aiPrompt, setAiPrompt] = useState("");
@@ -117,6 +120,17 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   const selectedCurrency = currencies.find(
     (c) => c.code === invoiceData.currency
   );
+
+  // Check if profile is complete (has essential business information)
+  const isProfileComplete =
+    profile &&
+    profile.business_name &&
+    profile.email &&
+    profile.phone &&
+    profile.address;
+
+  // Check if profile has a logo
+  const hasProfileLogo = profile && profile.logo_url;
 
   // Fetch clients when component mounts or userId changes
   useEffect(() => {
@@ -220,124 +234,138 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
         </CardContent>
       </Card>
 
-      {/* Business Information */}
-      <Card className="shadow-soft">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold">
-            Business Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="logo">Company Logo</Label>
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <Input
-                  id="logo"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoUpload}
-                  className="sr-only"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => document.getElementById("logo")?.click()}
-                  className="flex items-center gap-2"
-                >
-                  <Upload className="h-4 w-4" />
-                  Upload Logo
-                </Button>
+      {/* Business Information - Only show if profile is incomplete or no logo */}
+      {(!isProfileComplete || !hasProfileLogo) && (
+        <Card className="shadow-soft">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold">
+              {isProfileComplete ? "Company Logo" : "Business Information"}
+            </CardTitle>
+            {isProfileComplete && (
+              <p className="text-sm text-muted-foreground">
+                Your business information is complete. You can only update your
+                logo here.
+              </p>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Logo Upload - Always show if no profile logo */}
+            {!hasProfileLogo && (
+              <div className="space-y-2">
+                <Label htmlFor="logo">Company Logo</Label>
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <Input
+                      id="logo"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      className="sr-only"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById("logo")?.click()}
+                      className="flex items-center gap-2"
+                    >
+                      <Upload className="h-4 w-4" />
+                      Upload Logo
+                    </Button>
+                  </div>
+                  {logoPreview && (
+                    <div className="w-16 h-16 rounded-lg overflow-hidden border shadow-soft">
+                      <img
+                        src={logoPreview}
+                        alt="Logo preview"
+                        className="w-full h-full object-contain bg-background"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
-              {logoPreview && (
-                <div className="w-16 h-16 rounded-lg overflow-hidden border shadow-soft">
-                  <img
-                    src={logoPreview}
-                    alt="Logo preview"
-                    className="w-full h-full object-contain bg-background"
+            )}
+
+            {/* Business Information Fields - Only show if profile is incomplete */}
+            {!isProfileComplete && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="businessName">Business Name</Label>
+                  <Input
+                    id="businessName"
+                    value={invoiceData.businessInfo.name}
+                    onChange={(e) =>
+                      onUpdateInvoiceData({
+                        ...invoiceData,
+                        businessInfo: {
+                          ...invoiceData.businessInfo,
+                          name: e.target.value,
+                        },
+                      })
+                    }
+                    placeholder="Your Business Name"
                   />
                 </div>
-              )}
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="businessName">Business Name</Label>
-              <Input
-                id="businessName"
-                value={invoiceData.businessInfo.name}
-                onChange={(e) =>
-                  onUpdateInvoiceData({
-                    ...invoiceData,
-                    businessInfo: {
-                      ...invoiceData.businessInfo,
-                      name: e.target.value,
-                    },
-                  })
-                }
-                placeholder="Your Business Name"
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="businessEmail">Email</Label>
+                  <Input
+                    id="businessEmail"
+                    type="email"
+                    value={invoiceData.businessInfo.email}
+                    onChange={(e) =>
+                      onUpdateInvoiceData({
+                        ...invoiceData,
+                        businessInfo: {
+                          ...invoiceData.businessInfo,
+                          email: e.target.value,
+                        },
+                      })
+                    }
+                    placeholder="business@example.com"
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="businessEmail">Email</Label>
-              <Input
-                id="businessEmail"
-                type="email"
-                value={invoiceData.businessInfo.email}
-                onChange={(e) =>
-                  onUpdateInvoiceData({
-                    ...invoiceData,
-                    businessInfo: {
-                      ...invoiceData.businessInfo,
-                      email: e.target.value,
-                    },
-                  })
-                }
-                placeholder="business@example.com"
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="businessPhone">Phone</Label>
+                  <Input
+                    id="businessPhone"
+                    value={invoiceData.businessInfo.phone}
+                    onChange={(e) =>
+                      onUpdateInvoiceData({
+                        ...invoiceData,
+                        businessInfo: {
+                          ...invoiceData.businessInfo,
+                          phone: e.target.value,
+                        },
+                      })
+                    }
+                    placeholder="+1 (555) 123-4567"
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="businessPhone">Phone</Label>
-              <Input
-                id="businessPhone"
-                value={invoiceData.businessInfo.phone}
-                onChange={(e) =>
-                  onUpdateInvoiceData({
-                    ...invoiceData,
-                    businessInfo: {
-                      ...invoiceData.businessInfo,
-                      phone: e.target.value,
-                    },
-                  })
-                }
-                placeholder="+1 (555) 123-4567"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="businessAddress">Address</Label>
-              <Textarea
-                id="businessAddress"
-                value={invoiceData.businessInfo.address}
-                onChange={(e) =>
-                  onUpdateInvoiceData({
-                    ...invoiceData,
-                    businessInfo: {
-                      ...invoiceData.businessInfo,
-                      address: e.target.value,
-                    },
-                  })
-                }
-                placeholder="123 Business St, City, State 12345"
-                className="min-h-[80px]"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+                <div className="space-y-2">
+                  <Label htmlFor="businessAddress">Address</Label>
+                  <Textarea
+                    id="businessAddress"
+                    value={invoiceData.businessInfo.address}
+                    onChange={(e) =>
+                      onUpdateInvoiceData({
+                        ...invoiceData,
+                        businessInfo: {
+                          ...invoiceData.businessInfo,
+                          address: e.target.value,
+                        },
+                      })
+                    }
+                    placeholder="123 Business St, City, State 12345"
+                    className="min-h-[80px]"
+                  />
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Client Information */}
       <Card className="shadow-soft">
@@ -499,6 +527,130 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
               placeholder="123 Client St, City, State 12345"
               className="min-h-[80px]"
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Banking Information */}
+      <Card className="shadow-soft">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            Banking Information
+            <span className="text-sm font-normal text-muted-foreground">
+              (Optional)
+            </span>
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            This information will be included in your invoices for international
+            client payments. If you provide any banking information, all three
+            fields (bank name, account number, and SWIFT code) become required.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="bankName">Bank Name</Label>
+              <Input
+                id="bankName"
+                value={invoiceData.bankingInfo.bankName}
+                onChange={(e) =>
+                  onUpdateInvoiceData({
+                    ...invoiceData,
+                    bankingInfo: {
+                      ...invoiceData.bankingInfo,
+                      bankName: e.target.value,
+                    },
+                  })
+                }
+                placeholder="Bank Name"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="accountNumber">
+                Account Number
+                {(invoiceData.bankingInfo.bankName ||
+                  invoiceData.bankingInfo.accountNumber ||
+                  invoiceData.bankingInfo.swiftCode) && (
+                  <span className="text-red-500"> *</span>
+                )}
+              </Label>
+              <Input
+                id="accountNumber"
+                value={invoiceData.bankingInfo.accountNumber}
+                onChange={(e) =>
+                  onUpdateInvoiceData({
+                    ...invoiceData,
+                    bankingInfo: {
+                      ...invoiceData.bankingInfo,
+                      accountNumber: e.target.value,
+                    },
+                  })
+                }
+                placeholder="1234567890"
+              />
+              {(invoiceData.bankingInfo.bankName ||
+                invoiceData.bankingInfo.accountNumber ||
+                invoiceData.bankingInfo.swiftCode) && (
+                <p className="text-xs text-red-600 dark:text-red-400">
+                  Required when providing banking information
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="swiftCode">
+                SWIFT Code
+                {(invoiceData.bankingInfo.bankName ||
+                  invoiceData.bankingInfo.accountNumber ||
+                  invoiceData.bankingInfo.swiftCode) && (
+                  <span className="text-red-500"> *</span>
+                )}
+              </Label>
+              <Input
+                id="swiftCode"
+                value={invoiceData.bankingInfo.swiftCode}
+                onChange={(e) =>
+                  onUpdateInvoiceData({
+                    ...invoiceData,
+                    bankingInfo: {
+                      ...invoiceData.bankingInfo,
+                      swiftCode: e.target.value,
+                    },
+                  })
+                }
+                placeholder="BOFAUS3N"
+                className="uppercase"
+              />
+              <p className="text-xs text-muted-foreground">
+                8-11 character code for international wire transfers
+              </p>
+              {(invoiceData.bankingInfo.bankName ||
+                invoiceData.bankingInfo.accountNumber ||
+                invoiceData.bankingInfo.swiftCode) && (
+                <p className="text-xs text-red-600 dark:text-red-400">
+                  Required when providing banking information
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="iban">IBAN (International)</Label>
+              <Input
+                id="iban"
+                value={invoiceData.bankingInfo.iban}
+                onChange={(e) =>
+                  onUpdateInvoiceData({
+                    ...invoiceData,
+                    bankingInfo: {
+                      ...invoiceData.bankingInfo,
+                      iban: e.target.value,
+                    },
+                  })
+                }
+                placeholder="GB29 NWBK 6016 1331 9268 19"
+              />
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -247,6 +247,49 @@ export const CorporateTemplate = forwardRef<
           </div>
         )}
 
+        {/* Banking Information */}
+        {invoiceData.bankingInfo.bankName && (
+          <div className="border-2 border-gray-900">
+            <div className="bg-gray-900 text-white px-4 py-2 uppercase font-bold text-sm tracking-wide">
+              Banking Information
+            </div>
+            <div className="p-4 bg-gray-50">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-bold text-gray-700">Bank:</span>
+                  <p className="text-gray-900">
+                    {invoiceData.bankingInfo.bankName}
+                  </p>
+                </div>
+                <div>
+                  <span className="font-bold text-gray-700">
+                    Account Number:
+                  </span>
+                  <p className="text-gray-900">
+                    {invoiceData.bankingInfo.accountNumber}
+                  </p>
+                </div>
+                {invoiceData.bankingInfo.swiftCode && (
+                  <div>
+                    <span className="font-bold text-gray-700">SWIFT Code:</span>
+                    <p className="text-gray-900">
+                      {invoiceData.bankingInfo.swiftCode}
+                    </p>
+                  </div>
+                )}
+                {invoiceData.bankingInfo.iban && (
+                  <div>
+                    <span className="font-bold text-gray-700">IBAN:</span>
+                    <p className="text-gray-900">
+                      {invoiceData.bankingInfo.iban}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Notes */}
         {invoiceData.notes && (
           <div className="border-2 border-gray-900">

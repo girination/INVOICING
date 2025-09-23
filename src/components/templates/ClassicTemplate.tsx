@@ -207,6 +207,45 @@ export const ClassicTemplate = forwardRef<HTMLDivElement, ClassicTemplateProps>(
           </div>
         )}
 
+        {/* Banking Information */}
+        {invoiceData.bankingInfo.bankName && (
+          <div className="border-t-2 border-gray-900 pt-4">
+            <h3 className="text-lg font-bold text-gray-900 uppercase mb-4">
+              Banking Information:
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-bold text-gray-700">Bank:</span>
+                <p className="text-gray-900">
+                  {invoiceData.bankingInfo.bankName}
+                </p>
+              </div>
+              <div>
+                <span className="font-bold text-gray-700">Account Number:</span>
+                <p className="text-gray-900">
+                  {invoiceData.bankingInfo.accountNumber}
+                </p>
+              </div>
+              {invoiceData.bankingInfo.swiftCode && (
+                <div>
+                  <span className="font-bold text-gray-700">SWIFT Code:</span>
+                  <p className="text-gray-900">
+                    {invoiceData.bankingInfo.swiftCode}
+                  </p>
+                </div>
+              )}
+              {invoiceData.bankingInfo.iban && (
+                <div>
+                  <span className="font-bold text-gray-700">IBAN:</span>
+                  <p className="text-gray-900">
+                    {invoiceData.bankingInfo.iban}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Notes */}
         {invoiceData.notes && (
           <div className="border-t-2 border-gray-900 pt-4">

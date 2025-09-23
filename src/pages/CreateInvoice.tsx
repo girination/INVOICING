@@ -27,12 +27,12 @@ const CreateInvoice = () => {
   );
 
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
-    invoiceNumber: "INV-001",
+    invoiceNumber: "",
     date: new Date().toISOString().split("T")[0],
     dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       .toISOString()
       .split("T")[0], // 30 days from now
-    currency: "USD",
+    currency: "", // Will be set from profile or default to USD
     businessInfo: {
       name: "",
       email: "",
@@ -44,6 +44,12 @@ const CreateInvoice = () => {
       name: "",
       email: "",
       address: "",
+    },
+    bankingInfo: {
+      bankName: "",
+      accountNumber: "",
+      swiftCode: "",
+      iban: "",
     },
     lineItems: [],
     taxRate: 0,
@@ -93,6 +99,13 @@ const CreateInvoice = () => {
     calculateTotals,
   ]);
 
+  // Generate invoice number with prefix
+  const generateInvoiceNumber = useCallback((prefix?: string) => {
+    const basePrefix = prefix || "INV";
+    const timestamp = Date.now().toString().slice(-6); // Last 6 digits of timestamp
+    return `${basePrefix}-${timestamp}`;
+  }, []);
+
   // Prefill business information from user profile (only if fields are empty)
   useEffect(() => {
     if (profile && !profileLoading) {
@@ -104,12 +117,31 @@ const CreateInvoice = () => {
           prevData.businessInfo.phone ||
           prevData.businessInfo.address;
 
+        // Generate invoice number with profile prefix if available
+        const invoiceNumber =
+          prevData.invoiceNumber ||
+          generateInvoiceNumber(profile.invoice_prefix);
+
+        // Set currency from profile or default to USD
+        const currency = profile.default_currency || "USD";
+
+        // Set tax rate from profile if available
+        const taxRate = profile.default_tax_rate || 0;
+
         if (hasExistingData) {
-          return prevData; // Don't overwrite existing data
+          return {
+            ...prevData,
+            invoiceNumber,
+            currency,
+            taxRate,
+          }; // Don't overwrite existing business data, but update invoice number, currency, and tax rate
         }
 
         return {
           ...prevData,
+          invoiceNumber,
+          currency,
+          taxRate,
           businessInfo: {
             ...prevData.businessInfo,
             name: profile.business_name || prevData.businessInfo.name,
@@ -118,16 +150,27 @@ const CreateInvoice = () => {
             address: profile.address || prevData.businessInfo.address,
             logo: profile.logo_url || prevData.businessInfo.logo,
           },
+          bankingInfo: {
+            ...prevData.bankingInfo,
+            bankName: profile.bank_name || prevData.bankingInfo.bankName,
+            accountNumber:
+              profile.account_number || prevData.bankingInfo.accountNumber,
+            swiftCode: profile.swift_code || prevData.bankingInfo.swiftCode,
+            iban: profile.iban || prevData.bankingInfo.iban,
+          },
         };
       });
     }
-  }, [profile, profileLoading]);
+  }, [profile, profileLoading, generateInvoiceNumber]);
 
   // Function to manually prefill from profile
   const handlePrefillFromProfile = () => {
     if (profile) {
       setInvoiceData((prevData) => ({
         ...prevData,
+        invoiceNumber: generateInvoiceNumber(profile.invoice_prefix),
+        currency: profile.default_currency || "USD",
+        taxRate: profile.default_tax_rate || 0,
         businessInfo: {
           ...prevData.businessInfo,
           name: profile.business_name || prevData.businessInfo.name,
@@ -136,10 +179,19 @@ const CreateInvoice = () => {
           address: profile.address || prevData.businessInfo.address,
           logo: profile.logo_url || prevData.businessInfo.logo,
         },
+        bankingInfo: {
+          ...prevData.bankingInfo,
+          bankName: profile.bank_name || prevData.bankingInfo.bankName,
+          accountNumber:
+            profile.account_number || prevData.bankingInfo.accountNumber,
+          swiftCode: profile.swift_code || prevData.bankingInfo.swiftCode,
+          iban: profile.iban || prevData.bankingInfo.iban,
+        },
       }));
       toast({
         title: "Success!",
-        description: "Business information updated from your profile.",
+        description:
+          "Business information, banking details, invoice number, currency, and tax rate updated from your profile.",
       });
     }
   };
@@ -205,6 +257,21 @@ const CreateInvoice = () => {
             <div className="flex items-center gap-2 mt-2">
               <p className="text-sm text-green-600">
                 ✓ Business information prefilled from your profile
+                {profile.invoice_prefix && (
+                  <span className="ml-1">
+                    (Invoice prefix: {profile.invoice_prefix})
+                  </span>
+                )}
+                {profile.default_currency && (
+                  <span className="ml-1">
+                    (Currency: {profile.default_currency})
+                  </span>
+                )}
+                {profile.default_tax_rate && (
+                  <span className="ml-1">
+                    (Tax rate: {profile.default_tax_rate}%)
+                  </span>
+                )}
               </p>
               <Button
                 variant="ghost"
@@ -271,6 +338,7 @@ const CreateInvoice = () => {
             invoiceData={invoiceData}
             onUpdateInvoiceData={handleUpdateInvoiceData}
             userId={user?.id}
+            profile={profile}
           />
 
           {/* Template Selector */}

@@ -220,6 +220,48 @@ export const CreativeTemplate = forwardRef<
           </div>
         )}
 
+        {/* Banking Information */}
+        {invoiceData.bankingInfo.bankName && (
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+              Banking Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-medium text-gray-600">Bank:</span>
+                <p className="font-medium text-gray-900">
+                  {invoiceData.bankingInfo.bankName}
+                </p>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">
+                  Account Number:
+                </span>
+                <p className="font-medium text-gray-900">
+                  {invoiceData.bankingInfo.accountNumber}
+                </p>
+              </div>
+              {invoiceData.bankingInfo.swiftCode && (
+                <div>
+                  <span className="font-medium text-gray-600">SWIFT Code:</span>
+                  <p className="font-medium text-gray-900">
+                    {invoiceData.bankingInfo.swiftCode}
+                  </p>
+                </div>
+              )}
+              {invoiceData.bankingInfo.iban && (
+                <div>
+                  <span className="font-medium text-gray-600">IBAN:</span>
+                  <p className="font-medium text-gray-900">
+                    {invoiceData.bankingInfo.iban}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Notes */}
         {invoiceData.notes && (
           <div className="bg-gradient-to-br from-yellow-50 to-orange-50 p-6 rounded-xl border border-yellow-200">
