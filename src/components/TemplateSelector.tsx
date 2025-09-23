@@ -1,9 +1,7 @@
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Check } from 'lucide-react';
-import { InvoiceTemplate, TemplateInfo } from '@/types/templates';
+import React from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { InvoiceTemplate, TemplateInfo } from "@/types/templates";
 
 interface TemplateSelectorProps {
   selectedTemplate: InvoiceTemplate;
@@ -13,34 +11,41 @@ interface TemplateSelectorProps {
 const templateInfos: TemplateInfo[] = [
   {
     id: InvoiceTemplate.MODERN,
-    name: 'Modern',
-    description: 'Clean and professional with subtle gradients and soft shadows',
-    preview: 'bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-200'
+    name: "Modern",
+    description:
+      "Clean and professional with subtle gradients and soft shadows",
+    preview:
+      "bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-200",
   },
   {
     id: InvoiceTemplate.CLASSIC,
-    name: 'Classic',
-    description: 'Traditional business invoice with bold typography and structure',
-    preview: 'bg-white border-4 border-gray-900'
+    name: "Classic",
+    description:
+      "Traditional business invoice with bold typography and structure",
+    preview: "bg-white border-4 border-gray-900",
   },
   {
     id: InvoiceTemplate.MINIMAL,
-    name: 'Minimal',
-    description: 'Ultra-clean design with lots of white space and light typography',
-    preview: 'bg-white border border-gray-200'
+    name: "Minimal",
+    description:
+      "Ultra-clean design with lots of white space and light typography",
+    preview: "bg-white border border-gray-200",
   },
   {
     id: InvoiceTemplate.CREATIVE,
-    name: 'Creative',
-    description: 'Modern design with colorful gradients and rounded elements',
-    preview: 'bg-gradient-to-br from-purple-50 via-blue-50 to-green-50 border-2 border-purple-200'
+    name: "Creative",
+    description: "Modern design with colorful gradients and rounded elements",
+    preview:
+      "bg-gradient-to-br from-purple-50 via-blue-50 to-green-50 border-2 border-purple-200",
   },
   {
     id: InvoiceTemplate.CORPORATE,
-    name: 'Corporate',
-    description: 'Formal and structured layout perfect for enterprise businesses',
-    preview: 'bg-gray-50 border-t-4 border-gray-900 border-l-2 border-r-2 border-b-2'
-  }
+    name: "Corporate",
+    description:
+      "Formal and structured layout perfect for enterprise businesses",
+    preview:
+      "bg-gray-50 border-t-4 border-gray-900 border-l-2 border-r-2 border-b-2",
+  },
 ];
 
 export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
@@ -55,52 +60,43 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
           Select an invoice template that matches your business style
         </p>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {templateInfos.map((template) => {
           const isSelected = selectedTemplate === template.id;
-          
+
           return (
             <Card
               key={template.id}
               className={`cursor-pointer transition-all duration-200 hover:shadow-medium ${
-                isSelected 
-                  ? 'ring-2 ring-primary shadow-medium' 
-                  : 'hover:shadow-soft'
+                isSelected
+                  ? "ring-2 ring-primary shadow-medium"
+                  : "hover:shadow-soft"
               }`}
               onClick={() => onSelectTemplate(template.id)}
             >
               <CardContent className="p-4 space-y-3">
                 {/* Preview */}
-                <div className={`h-24 rounded-lg ${template.preview} relative overflow-hidden`}>
+                <div
+                  className={`h-24 rounded-lg ${template.preview} relative overflow-hidden`}
+                >
                   <div className="absolute inset-2 space-y-1">
                     <div className="h-2 bg-gray-300/60 rounded w-1/2"></div>
                     <div className="h-1 bg-gray-300/40 rounded w-3/4"></div>
                     <div className="h-1 bg-gray-300/40 rounded w-1/3"></div>
                   </div>
-                  
-                  {isSelected && (
-                    <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
-                      <Check className="h-3 w-3" />
-                    </div>
-                  )}
                 </div>
-                
+
                 {/* Template Info */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <h4 className="font-semibold">{template.name}</h4>
-                    {isSelected && (
-                      <Badge variant="secondary" className="text-xs">
-                        Selected
-                      </Badge>
-                    )}
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     {template.description}
                   </p>
                 </div>
-                
+
                 {/* Select Button */}
                 <Button
                   variant={isSelected ? "default" : "outline"}
@@ -111,7 +107,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                     onSelectTemplate(template.id);
                   }}
                 >
-                  {isSelected ? 'Selected' : 'Select'}
+                  {isSelected ? "Selected" : "Select"}
                 </Button>
               </CardContent>
             </Card>
