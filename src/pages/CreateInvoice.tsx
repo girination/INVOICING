@@ -253,36 +253,6 @@ const CreateInvoice = () => {
               Loading your business profile...
             </p>
           )}
-          {profile && !profileLoading && (
-            <div className="flex items-center gap-2 mt-2">
-              <p className="text-sm text-green-600">
-                ✓ Business information prefilled from your profile
-                {profile.invoice_prefix && (
-                  <span className="ml-1">
-                    (Invoice prefix: {profile.invoice_prefix})
-                  </span>
-                )}
-                {profile.default_currency && (
-                  <span className="ml-1">
-                    (Currency: {profile.default_currency})
-                  </span>
-                )}
-                {profile.default_tax_rate && (
-                  <span className="ml-1">
-                    (Tax rate: {profile.default_tax_rate}%)
-                  </span>
-                )}
-              </p>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handlePrefillFromProfile}
-                className="text-xs h-6 px-2"
-              >
-                Refresh
-              </Button>
-            </div>
-          )}
         </div>
 
         <div className="flex items-center gap-3">

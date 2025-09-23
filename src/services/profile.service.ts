@@ -11,7 +11,6 @@ export interface UserProfile {
   address?: string;
   default_currency?: string;
   default_tax_rate?: number;
-  default_payment_terms?: number;
   invoice_prefix?: string;
   bank_name?: string;
   account_number?: string;

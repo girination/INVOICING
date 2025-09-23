@@ -238,16 +238,6 @@ export class ProfileController {
       }
     }
 
-    // Validate payment terms if provided
-    if (data.default_payment_terms !== undefined) {
-      if (data.default_payment_terms < 1 || data.default_payment_terms > 365) {
-        errors.push({
-          field: "default_payment_terms",
-          message: "Payment terms must be between 1 and 365 days",
-        });
-      }
-    }
-
     // Validate banking information - if any banking field is provided, all three are required
     const hasBankName = data.bank_name && data.bank_name.trim() !== "";
     const hasAccountNumber =
@@ -351,8 +341,6 @@ export class ProfileController {
       cleaned.default_currency = data.default_currency;
     if (data.default_tax_rate !== undefined)
       cleaned.default_tax_rate = data.default_tax_rate;
-    if (data.default_payment_terms !== undefined)
-      cleaned.default_payment_terms = data.default_payment_terms;
 
     return cleaned;
   }

@@ -93,7 +93,6 @@ export default function Profile() {
     // Invoice Settings
     defaultCurrency: "USD",
     defaultTaxRate: 10,
-    defaultPaymentTerms: 30,
     invoicePrefix: "INV",
 
     // Bank Information (optional)
@@ -121,7 +120,6 @@ export default function Profile() {
             logoUrl: response.data.logo_url || "",
             defaultCurrency: response.data.default_currency || "USD",
             defaultTaxRate: response.data.default_tax_rate || 10,
-            defaultPaymentTerms: response.data.default_payment_terms || 30,
             invoicePrefix: response.data.invoice_prefix || "INV",
             bankName: response.data.bank_name || "",
             accountNumber: response.data.account_number || "",
@@ -222,7 +220,6 @@ export default function Profile() {
         logo_url: profileData.logoUrl,
         default_currency: profileData.defaultCurrency,
         default_tax_rate: profileData.defaultTaxRate,
-        default_payment_terms: profileData.defaultPaymentTerms,
         invoice_prefix: profileData.invoicePrefix,
         bank_name: profileData.bankName,
         account_number: profileData.accountNumber,
@@ -481,20 +478,6 @@ export default function Profile() {
                   handleInputChange("defaultTaxRate", e.target.value)
                 }
                 placeholder="10"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="defaultPaymentTerms">Payment Terms (days)</Label>
-              <Input
-                id="defaultPaymentTerms"
-                type="number"
-                min="1"
-                value={profileData.defaultPaymentTerms}
-                onChange={(e) =>
-                  handleInputChange("defaultPaymentTerms", e.target.value)
-                }
-                placeholder="30"
               />
             </div>
 
