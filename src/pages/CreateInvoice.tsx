@@ -11,10 +11,13 @@ import { generatePDF } from "@/utils/pdfGenerator";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
+import { InvoiceController } from "@/controllers/invoice.controller";
+import { Save } from "lucide-react";
 
 const CreateInvoice = () => {
   const [showPreview, setShowPreview] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<InvoiceTemplate>(
     InvoiceTemplate.MODERN
   );
@@ -33,6 +36,8 @@ const CreateInvoice = () => {
       .toISOString()
       .split("T")[0], // 30 days from now
     currency: "", // Will be set from profile or default to USD
+    isRecurring: false,
+    recurringInterval: "monthly",
     businessInfo: {
       name: "",
       email: "",
@@ -235,6 +240,57 @@ const CreateInvoice = () => {
     }
   };
 
+  const handleSaveInvoice = async () => {
+    if (!user?.id) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to save invoices.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const response = await InvoiceController.saveInvoice(
+        user.id,
+        invoiceData,
+        selectedTemplate
+      );
+
+      if (response.success) {
+        toast({
+          title: "Success!",
+          description: "Invoice saved successfully.",
+        });
+      } else {
+        if (response.errors && response.errors.length > 0) {
+          const firstError = response.errors[0];
+          toast({
+            title: "Validation Error",
+            description: `${firstError.field}: ${firstError.message}`,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: response.message,
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error saving invoice:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save invoice. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const selectedCurrency = currencies.find(
     (c) => c.code === invoiceData.currency
   );
@@ -271,6 +327,25 @@ const CreateInvoice = () => {
               <>
                 <Eye className="h-4 w-4 mr-2" />
                 Show Preview
+              </>
+            )}
+          </Button>
+
+          <Button
+            onClick={handleSaveInvoice}
+            disabled={isSaving}
+            variant="outline"
+            className="hover:bg-green-50 hover:border-green-300 hover:text-green-700"
+          >
+            {isSaving ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent mr-2" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Save Invoice
               </>
             )}
           </Button>

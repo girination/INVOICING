@@ -32,6 +32,8 @@ export interface InvoiceData {
   date: string;
   dueDate: string;
   currency: string;
+  isRecurring: boolean;
+  recurringInterval: "weekly" | "monthly" | "quarterly" | "yearly";
   businessInfo: BusinessInfo;
   clientInfo: ClientInfo;
   bankingInfo: BankingInfo;

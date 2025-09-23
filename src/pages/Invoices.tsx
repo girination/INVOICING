@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -10,132 +10,131 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { 
-  Search, 
-  Eye, 
-  Download, 
-  Edit, 
-  Trash2, 
+} from "@/components/ui/select";
+import {
+  Search,
+  Eye,
+  Download,
+  Edit,
+  Trash2,
   Plus,
   Filter,
-  Calendar
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { toast } from '@/hooks/use-toast';
+  Calendar,
+  Loader2,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { InvoiceController } from "@/controllers/invoice.controller";
+import { SavedInvoice } from "@/services/invoice.service";
 
 interface Invoice {
   id: string;
-  invoiceNumber: string;
-  clientName: string;
-  date: string;
-  dueDate: string;
-  amount: number;
-  status: 'Draft' | 'Sent' | 'Paid' | 'Overdue';
+  invoice_number: string;
+  client_name: string;
+  issue_date: string;
+  due_date: string;
+  total: number;
   currency: string;
+  is_recurring: boolean;
+  recurring_interval?: string;
+  template: string;
+  created_at: string;
 }
 
 export default function Invoices() {
-  const [invoices, setInvoices] = useState<Invoice[]>([
-    {
-      id: '1',
-      invoiceNumber: 'INV-001',
-      clientName: 'Acme Corporation',
-      date: '2024-01-15',
-      dueDate: '2024-02-14',
-      amount: 2500,
-      status: 'Paid',
-      currency: 'USD',
-    },
-    {
-      id: '2',
-      invoiceNumber: 'INV-002',
-      clientName: 'Tech Solutions Ltd',
-      date: '2024-01-20',
-      dueDate: '2024-02-19',
-      amount: 1800,
-      status: 'Sent',
-      currency: 'USD',
-    },
-    {
-      id: '3',
-      invoiceNumber: 'INV-003',
-      clientName: 'Design Studio Pro',
-      date: '2024-01-08',
-      dueDate: '2024-02-07',
-      amount: 950,
-      status: 'Overdue',
-      currency: 'USD',
-    },
-    {
-      id: '4',
-      invoiceNumber: 'INV-004',
-      clientName: 'Marketing Agency',
-      date: '2024-01-25',
-      dueDate: '2024-02-24',
-      amount: 3200,
-      status: 'Draft',
-      currency: 'USD',
-    },
-  ]);
+  const { user } = useAuth();
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  // Fetch invoices from database
+  useEffect(() => {
+    const loadInvoices = async () => {
+      if (!user?.id) return;
 
-  const filteredInvoices = invoices.filter(invoice => {
-    const matchesSearch = 
-      invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.clientName.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || invoice.status.toLowerCase() === statusFilter;
-    
+      setIsLoading(true);
+      try {
+        const response = await InvoiceController.getInvoices(user.id);
+        if (response.success && response.data) {
+          setInvoices(response.data as Invoice[]);
+        } else {
+          toast({
+            title: "Error",
+            description: response.message,
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error("Error loading invoices:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load invoices",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadInvoices();
+  }, [user?.id]);
+
+  const filteredInvoices = invoices.filter((invoice) => {
+    const matchesSearch =
+      invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.client_name.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // For now, we'll show all invoices since we don't have status tracking yet
+    const matchesStatus = statusFilter === "all";
+
     return matchesSearch && matchesStatus;
   });
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'Paid':
-        return 'default';
-      case 'Sent':
-        return 'secondary';
-      case 'Overdue':
-        return 'destructive';
-      case 'Draft':
-        return 'outline';
+      case "Paid":
+        return "default";
+      case "Sent":
+        return "secondary";
+      case "Overdue":
+        return "destructive";
+      case "Draft":
+        return "outline";
       default:
-        return 'outline';
+        return "outline";
     }
   };
 
   const handleDeleteInvoice = (invoiceId: string) => {
-    setInvoices(prev => prev.filter(invoice => invoice.id !== invoiceId));
+    setInvoices((prev) => prev.filter((invoice) => invoice.id !== invoiceId));
     toast({
-      title: 'Invoice Deleted',
-      description: 'Invoice has been deleted successfully.',
-      variant: 'destructive',
+      title: "Invoice Deleted",
+      description: "Invoice has been deleted successfully.",
+      variant: "destructive",
     });
   };
 
   const handleDownloadInvoice = (invoice: Invoice) => {
     toast({
-      title: 'Download Started',
-      description: `Downloading ${invoice.invoiceNumber}...`,
+      title: "Download Started",
+      description: `Downloading ${invoice.invoice_number}...`,
     });
     // In a real app, this would trigger the actual PDF download
   };
 
-  const totalAmount = filteredInvoices.reduce((sum, invoice) => sum + invoice.amount, 0);
-  const statusCounts = invoices.reduce((acc, invoice) => {
-    acc[invoice.status] = (acc[invoice.status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const totalAmount = filteredInvoices.reduce(
+    (sum, invoice) => sum + invoice.total,
+    0
+  );
 
   return (
     <div className="space-y-6">
@@ -165,26 +164,26 @@ export default function Invoices() {
         </Card>
         <Card className="shadow-soft">
           <CardContent className="p-4">
+            <div className="text-2xl font-bold text-blue-600">
+              {invoices.filter((invoice) => invoice.is_recurring).length}
+            </div>
+            <p className="text-sm text-muted-foreground">Recurring</p>
+          </CardContent>
+        </Card>
+        <Card className="shadow-soft">
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-purple-600">
+              {invoices.filter((invoice) => !invoice.is_recurring).length}
+            </div>
+            <p className="text-sm text-muted-foreground">One-time</p>
+          </CardContent>
+        </Card>
+        <Card className="shadow-soft">
+          <CardContent className="p-4">
             <div className="text-2xl font-bold text-green-600">
-              {statusCounts.Paid || 0}
+              {totalAmount.toLocaleString()}
             </div>
-            <p className="text-sm text-muted-foreground">Paid</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-soft">
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-yellow-600">
-              {statusCounts.Sent || 0}
-            </div>
-            <p className="text-sm text-muted-foreground">Pending</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-soft">
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-red-600">
-              {statusCounts.Overdue || 0}
-            </div>
-            <p className="text-sm text-muted-foreground">Overdue</p>
+            <p className="text-sm text-muted-foreground">Total Value</p>
           </CardContent>
         </Card>
       </div>
@@ -246,39 +245,51 @@ export default function Invoices() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredInvoices.length === 0 ? (
+                {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      {searchTerm || statusFilter !== 'all' 
-                        ? 'No invoices found matching your criteria.' 
-                        : 'No invoices created yet.'}
+                    <TableCell colSpan={7} className="text-center py-8">
+                      <div className="flex items-center justify-center">
+                        <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                        Loading invoices...
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredInvoices.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
+                      className="text-center py-8 text-muted-foreground"
+                    >
+                      {searchTerm || statusFilter !== "all"
+                        ? "No invoices found matching your criteria."
+                        : "No invoices created yet."}
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredInvoices.map((invoice) => (
                     <TableRow key={invoice.id}>
                       <TableCell className="font-medium">
-                        {invoice.invoiceNumber}
+                        {invoice.invoice_number}
                       </TableCell>
-                      <TableCell>{invoice.clientName}</TableCell>
+                      <TableCell>{invoice.client_name}</TableCell>
                       <TableCell>
                         <div className="flex items-center">
                           <Calendar className="h-3 w-3 mr-1 text-muted-foreground" />
-                          {new Date(invoice.date).toLocaleDateString()}
+                          {new Date(invoice.issue_date).toLocaleDateString()}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center">
                           <Calendar className="h-3 w-3 mr-1 text-muted-foreground" />
-                          {new Date(invoice.dueDate).toLocaleDateString()}
+                          {new Date(invoice.due_date).toLocaleDateString()}
                         </div>
                       </TableCell>
                       <TableCell className="font-medium">
-                        ${invoice.amount.toLocaleString()}
+                        {invoice.currency} {invoice.total.toLocaleString()}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getStatusBadgeVariant(invoice.status)}>
-                          {invoice.status}
+                        <Badge variant="secondary">
+                          {invoice.is_recurring ? "Recurring" : "One-time"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">

@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Plus, Trash2, Upload, Sparkles, UserPlus } from "lucide-react";
 import { InvoiceData, LineItem, currencies } from "@/types/invoice";
@@ -24,6 +25,30 @@ interface InvoiceFormProps {
   userId?: string | null;
   profile?: UserProfile | null;
 }
+
+// Helper function to calculate next invoice date
+const getNextInvoiceDate = (currentDate: string, interval: string): string => {
+  const date = new Date(currentDate);
+
+  switch (interval) {
+    case "weekly":
+      date.setDate(date.getDate() + 7);
+      break;
+    case "monthly":
+      date.setMonth(date.getMonth() + 1);
+      break;
+    case "quarterly":
+      date.setMonth(date.getMonth() + 3);
+      break;
+    case "yearly":
+      date.setFullYear(date.getFullYear() + 1);
+      break;
+    default:
+      return currentDate;
+  }
+
+  return date.toISOString().split("T")[0];
+};
 
 export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   invoiceData,
@@ -600,6 +625,85 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
               </SelectContent>
             </Select>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Recurring Invoice */}
+      <Card className="shadow-soft">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold">
+            Recurring Invoice
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <Label htmlFor="isRecurring">Recurring Invoice</Label>
+              <p className="text-sm text-muted-foreground">
+                Enable if this invoice will be sent regularly
+              </p>
+            </div>
+            <Switch
+              id="isRecurring"
+              checked={invoiceData.isRecurring}
+              onCheckedChange={(checked) =>
+                onUpdateInvoiceData({
+                  ...invoiceData,
+                  isRecurring: checked,
+                })
+              }
+            />
+          </div>
+
+          {invoiceData.isRecurring && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="recurringInterval">Recurring Interval</Label>
+                <Select
+                  value={invoiceData.recurringInterval}
+                  onValueChange={(
+                    value: "weekly" | "monthly" | "quarterly" | "yearly"
+                  ) =>
+                    onUpdateInvoiceData({
+                      ...invoiceData,
+                      recurringInterval: value,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="quarterly">Quarterly</SelectItem>
+                    <SelectItem value="yearly">Yearly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-blue-900">
+                      Next Invoice Date
+                    </p>
+                    <p className="text-sm text-blue-700">
+                      {getNextInvoiceDate(
+                        invoiceData.date,
+                        invoiceData.recurringInterval
+                      )}
+                    </p>
+                    <p className="text-xs text-blue-600">
+                      This invoice will be automatically generated and sent on
+                      this date
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
