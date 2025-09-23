@@ -11,6 +11,8 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
 import CreateInvoice from "./pages/CreateInvoice";
+import EditInvoice from "./pages/EditInvoice";
+import ViewInvoice from "./pages/ViewInvoice";
 import Invoices from "./pages/Invoices";
 import Clients from "./pages/Clients";
 import Templates from "./pages/Templates";
@@ -49,6 +51,8 @@ const App = () => (
             >
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="create-invoice" element={<CreateInvoice />} />
+              <Route path="edit-invoice/:id" element={<EditInvoice />} />
+              <Route path="view-invoice/:id" element={<ViewInvoice />} />
               <Route path="invoices" element={<Invoices />} />
               <Route path="clients" element={<Clients />} />
               <Route path="templates" element={<Templates />} />

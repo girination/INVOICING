@@ -33,6 +33,7 @@ export interface SavedInvoice {
   total: number;
   notes?: string;
   template: string;
+  email_sent_date?: string;
   created_at: string;
   updated_at: string;
 }
@@ -296,6 +297,47 @@ export class InvoiceService {
       return {
         success: false,
         message: "An unexpected error occurred while deleting the invoice",
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+
+  /**
+   * Update the email sent date for an invoice
+   */
+  static async updateEmailSentDate(
+    invoiceId: string
+  ): Promise<InvoiceServiceResponse> {
+    try {
+      const { data, error } = await supabase
+        .from("invoices")
+        .update({
+          email_sent_date: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", invoiceId)
+        .select()
+        .single();
+
+      if (error) {
+        ErrorService.logError("InvoiceService.updateEmailSentDate", error);
+        return {
+          success: false,
+          message: "Failed to update email sent date",
+          error: error.message,
+        };
+      }
+
+      return {
+        success: true,
+        data: data as SavedInvoice,
+        message: "Email sent date updated successfully",
+      };
+    } catch (error: any) {
+      ErrorService.logError("InvoiceService.updateEmailSentDate", error);
+      return {
+        success: false,
+        message: "An unexpected error occurred",
         error: error instanceof Error ? error.message : "Unknown error",
       };
     }

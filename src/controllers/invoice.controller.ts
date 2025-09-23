@@ -280,4 +280,21 @@ export class InvoiceController {
 
     return errors;
   }
+
+  /**
+   * Update the email sent date for an invoice
+   */
+  static async updateEmailSentDate(
+    invoiceId: string
+  ): Promise<InvoiceServiceResponse> {
+    if (!invoiceId || invoiceId.trim() === "") {
+      return {
+        success: false,
+        message: "Invoice ID is required",
+        errors: [{ field: "invoiceId", message: "Invoice ID is required" }],
+      };
+    }
+
+    return InvoiceService.updateEmailSentDate(invoiceId);
+  }
 }

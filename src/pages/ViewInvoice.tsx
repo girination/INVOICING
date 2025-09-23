@@ -1,0 +1,334 @@
+import React, { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Download, ArrowLeft, Eye, Loader2 } from "lucide-react";
+import { InvoicePreview } from "@/components/InvoicePreview";
+import { InvoiceData, currencies } from "@/types/invoice";
+import { InvoiceTemplate } from "@/types/templates";
+import { generatePDF } from "@/utils/pdfGenerator";
+import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { InvoiceController } from "@/controllers/invoice.controller";
+
+const ViewInvoice = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const invoicePreviewRef = useRef<HTMLDivElement>(null);
+
+  // Get user data
+  const { user } = useAuth();
+
+  const [invoiceData, setInvoiceData] = useState<InvoiceData>({
+    invoiceNumber: "",
+    date: new Date().toISOString().split("T")[0],
+    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0],
+    currency: "",
+    isRecurring: false,
+    recurringInterval: "monthly",
+    businessInfo: {
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
+      logo: null,
+    },
+    clientInfo: {
+      name: "",
+      email: "",
+      address: "",
+    },
+    bankingInfo: {
+      bankName: "",
+      accountNumber: "",
+      swiftCode: "",
+      iban: "",
+    },
+    lineItems: [],
+    taxRate: 0,
+    discountRate: 0,
+    notes: "Thank you for your business!",
+    subtotal: 0,
+    taxAmount: 0,
+    discountAmount: 0,
+    total: 0,
+  });
+
+  const [selectedTemplate, setSelectedTemplate] = useState<InvoiceTemplate>(
+    InvoiceTemplate.MODERN
+  );
+
+  // Load invoice data
+  useEffect(() => {
+    const loadInvoice = async () => {
+      if (!id || !user?.id) return;
+
+      setIsLoading(true);
+      try {
+        const response = await InvoiceController.getInvoice(id);
+        if (response.success && response.data) {
+          const invoice = response.data;
+
+          // Convert saved invoice data to InvoiceData format
+          const convertedData: InvoiceData = {
+            invoiceNumber: invoice.invoice_number,
+            date: invoice.issue_date,
+            dueDate: invoice.due_date,
+            currency: invoice.currency,
+            isRecurring: invoice.is_recurring,
+            recurringInterval: invoice.recurring_interval || "monthly",
+            businessInfo: {
+              name: invoice.business_name || "",
+              email: invoice.business_email || "",
+              phone: invoice.business_phone || "",
+              address: invoice.business_address || "",
+              logo: invoice.business_logo_url || null,
+            },
+            clientInfo: {
+              name: invoice.client_name || "",
+              email: invoice.client_email || "",
+              address: invoice.client_address || "",
+            },
+            bankingInfo: {
+              bankName: invoice.bank_name || "",
+              accountNumber: invoice.account_number || "",
+              swiftCode: invoice.swift_code || "",
+              iban: invoice.iban || "",
+            },
+            lineItems: invoice.line_items || [],
+            taxRate: invoice.tax_rate || 0,
+            discountRate: invoice.discount_rate || 0,
+            subtotal: invoice.subtotal || 0,
+            taxAmount: invoice.tax_amount || 0,
+            discountAmount: invoice.discount_amount || 0,
+            total: invoice.total || 0,
+            notes: invoice.notes || "Thank you for your business!",
+          };
+
+          setInvoiceData(convertedData);
+          setSelectedTemplate(invoice.template as InvoiceTemplate);
+        } else {
+          toast({
+            title: "Error",
+            description: response.message,
+            variant: "destructive",
+          });
+          navigate("/app/invoices");
+        }
+      } catch (error) {
+        console.error("Error loading invoice:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load invoice",
+          variant: "destructive",
+        });
+        navigate("/app/invoices");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadInvoice();
+  }, [id, user?.id, navigate]);
+
+  const handleGeneratePDF = async () => {
+    if (!invoicePreviewRef.current) {
+      toast({
+        title: "Error",
+        description: "Invoice preview not found. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      await generatePDF(invoicePreviewRef.current, invoiceData);
+      toast({
+        title: "Success!",
+        description: "Invoice PDF has been generated and downloaded.",
+      });
+    } catch (error) {
+      console.error("PDF generation error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const selectedCurrency = currencies.find(
+    (c) => c.code === invoiceData.currency
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center space-x-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading invoice...</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/app/invoices")}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Invoices
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">View Invoice</h1>
+            <p className="text-muted-foreground mt-1">
+              Invoice #{invoiceData.invoiceNumber}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={handleGeneratePDF}
+            disabled={isGenerating}
+            className="bg-primary-gradient hover:opacity-90 transition-opacity"
+          >
+            {isGenerating ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-background border-t-transparent mr-2" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4 mr-2" />
+                Download PDF
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* Invoice Preview */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <Eye className="h-6 w-6 text-primary" />
+          <h2 className="text-2xl font-semibold">Invoice Preview</h2>
+        </div>
+
+        <Card className="shadow-soft">
+          <CardContent className="p-0">
+            <div className="sticky top-6">
+              <InvoicePreview
+                ref={invoicePreviewRef}
+                invoiceData={invoiceData}
+                template={selectedTemplate}
+                currency={selectedCurrency}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Invoice Details Summary */}
+      <Card className="shadow-soft">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-3">
+            <Eye className="h-5 w-5 text-primary" />
+            Invoice Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">
+                Invoice Number
+              </p>
+              <p className="text-lg font-semibold">
+                {invoiceData.invoiceNumber}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">
+                Issue Date
+              </p>
+              <p className="text-lg font-semibold">
+                {new Date(invoiceData.date).toLocaleDateString()}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">
+                Due Date
+              </p>
+              <p className="text-lg font-semibold">
+                {new Date(invoiceData.dueDate).toLocaleDateString()}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">
+                Total Amount
+              </p>
+              <p className="text-lg font-semibold text-green-600">
+                {selectedCurrency?.symbol || invoiceData.currency}{" "}
+                {invoiceData.total.toLocaleString()}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">
+                Client
+              </p>
+              <p className="text-lg font-semibold">
+                {invoiceData.clientInfo.name}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {invoiceData.clientInfo.email}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">
+                Template
+              </p>
+              <p className="text-lg font-semibold capitalize">
+                {selectedTemplate.toLowerCase().replace("_", " ")}
+              </p>
+            </div>
+          </div>
+
+          {invoiceData.isRecurring && (
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-start gap-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-blue-900">
+                    Recurring Invoice
+                  </p>
+                  <p className="text-sm text-blue-700">
+                    This invoice is set to recur {invoiceData.recurringInterval}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default ViewInvoice;
