@@ -34,7 +34,10 @@ export const ModernTemplate = forwardRef<HTMLDivElement, ModernTemplateProps>(
           <div className="flex justify-between items-start">
             <div className="space-y-2">
               {invoiceData.businessInfo.logo && (
-                <div className="w-32 h-16 mb-4">
+                <div
+                  className="mb-4"
+                  style={{ maxWidth: "200px", maxHeight: "80px" }}
+                >
                   <img
                     src={
                       typeof invoiceData.businessInfo.logo === "string"
@@ -42,7 +45,8 @@ export const ModernTemplate = forwardRef<HTMLDivElement, ModernTemplateProps>(
                         : URL.createObjectURL(invoiceData.businessInfo.logo)
                     }
                     alt="Business logo"
-                    className="w-full h-full object-contain"
+                    className="max-w-full max-h-full object-contain"
+                    style={{ width: "auto", height: "auto" }}
                   />
                 </div>
               )}

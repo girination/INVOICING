@@ -39,7 +39,10 @@ export const CreativeTemplate = forwardRef<
           <div className="flex justify-between items-start">
             <div className="space-y-2">
               {invoiceData.businessInfo.logo && (
-                <div className="w-32 h-16 mb-4 bg-white/20 rounded-lg p-2">
+                <div
+                  className="mb-4 bg-white/20 rounded-lg p-2"
+                  style={{ maxWidth: "200px", maxHeight: "80px" }}
+                >
                   <img
                     src={
                       typeof invoiceData.businessInfo.logo === "string"
@@ -47,7 +50,8 @@ export const CreativeTemplate = forwardRef<
                         : URL.createObjectURL(invoiceData.businessInfo.logo)
                     }
                     alt="Logo"
-                    className="w-full h-full object-contain"
+                    className="max-w-full max-h-full object-contain"
+                    style={{ width: "auto", height: "auto" }}
                   />
                 </div>
               )}

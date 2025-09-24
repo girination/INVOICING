@@ -42,7 +42,8 @@ export const ClassicTemplate = forwardRef<HTMLDivElement, ClassicTemplateProps>(
                     : URL.createObjectURL(invoiceData.businessInfo.logo)
                 }
                 alt="Business logo"
-                className="h-16 object-contain"
+                className="max-h-16 object-contain"
+                style={{ width: "auto", height: "auto" }}
               />
             </div>
           )}
