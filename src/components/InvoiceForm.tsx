@@ -18,6 +18,7 @@ import { InvoiceData, LineItem, currencies } from "@/types/invoice";
 import { toast } from "@/hooks/use-toast";
 import { ClientService, Client } from "@/services/client.service";
 import { UserProfile } from "@/services/profile.service";
+import { AIController } from "@/controllers/ai.controller";
 
 interface InvoiceFormProps {
   invoiceData: InvoiceData;
@@ -58,6 +59,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
 }) => {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [aiPrompt, setAiPrompt] = useState("");
+  const [aiGenerating, setAiGenerating] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [clientsLoading, setClientsLoading] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string>("");
@@ -209,13 +211,76 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
     [clients, invoiceData, onUpdateInvoiceData]
   );
 
-  const handleAIGenerate = () => {
-    toast({
-      title: "Coming Soon!",
-      description:
-        "AI invoice generation will be available once you connect to Supabase.",
-      variant: "default",
-    });
+  const handleAIGenerate = async () => {
+    if (!aiPrompt.trim()) {
+      toast({
+        title: "Missing Description",
+        description: "Please describe your invoice details.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setAiGenerating(true);
+    try {
+      const response = await AIController.generateInvoiceFromDescription({
+        prompt: aiPrompt,
+        businessName: profile?.business_name,
+        businessEmail: profile?.email,
+        businessPhone: profile?.phone,
+        businessAddress: profile?.address,
+      });
+
+      if (response.success && response.data) {
+        // Reset the invoice data with AI-generated content (replace existing data)
+        const newInvoiceData: InvoiceData = {
+          ...invoiceData,
+          businessInfo: {
+            name: response.data.businessInfo.name,
+            email: response.data.businessInfo.email,
+            phone: response.data.businessInfo.phone,
+            address: response.data.businessInfo.address,
+            logo: invoiceData.businessInfo.logo, // Keep existing logo
+          },
+          clientInfo: {
+            name: response.data.clientInfo.name,
+            email: response.data.clientInfo.email,
+            address: response.data.clientInfo.address,
+          },
+          lineItems: response.data.lineItems, // Replace all line items with new ones
+          invoiceNumber: response.data.invoiceDetails.invoiceNumber,
+          date: response.data.invoiceDetails.issueDate,
+          dueDate: response.data.invoiceDetails.dueDate,
+          currency: response.data.invoiceDetails.currency,
+          taxRate: response.data.invoiceDetails.taxRate,
+          notes: response.data.invoiceDetails.notes,
+        };
+
+        onUpdateInvoiceData(newInvoiceData);
+
+        toast({
+          title: "AI Invoice Generated!",
+          description: `Generated ${response.data.lineItems.length} line items and filled invoice details.`,
+        });
+
+        // Keep the prompt so user can edit and regenerate
+      } else {
+        toast({
+          title: "Generation Failed",
+          description: response.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error generating AI invoice:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate AI invoice. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setAiGenerating(false);
+    }
   };
 
   return (
@@ -235,17 +300,26 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
               id="aiPrompt"
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
-              placeholder="Example: Create an invoice for web design services. Client is Acme Corp, 3 pages at $500 each, 10% tax, due in 30 days..."
+              placeholder="Example: Create an invoice for web design services for Acme Corp. 3 pages at $500 each, logo design for $300, 10% tax, due in 30 days. Client is John Smith at john@acme.com, 123 Business St, New York..."
               className="min-h-[100px]"
             />
           </div>
           <Button
             onClick={handleAIGenerate}
-            disabled={!aiPrompt.trim()}
+            disabled={!aiPrompt.trim() || aiGenerating}
             className="w-full bg-primary-gradient hover:opacity-90 transition-opacity"
           >
-            <Sparkles className="h-4 w-4 mr-2" />
-            Generate Invoice with AI
+            {aiGenerating ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-background border-t-transparent mr-2" />
+                Generating with AI...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4 mr-2" />
+                Generate Invoice with AI
+              </>
+            )}
           </Button>
           <div className="text-xs text-muted-foreground">
             <p className="font-medium mb-1">💡 Tips for better results:</p>
