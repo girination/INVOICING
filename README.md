@@ -112,7 +112,7 @@ Choose from different OpenAI models based on your needs:
 npm run dev
 ```
 
-Open your browser and navigate to `http://localhost:5173`
+Open your browser and navigate to `http://localhost:8080`
 
 ### Production Build
 
