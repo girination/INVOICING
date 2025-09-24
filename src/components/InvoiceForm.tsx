@@ -286,42 +286,118 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   return (
     <div className="space-y-6">
       {/* AI Invoice Generator */}
-      <Card className="shadow-soft border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+      <Card
+        className={`shadow-soft border-primary/20 bg-gradient-to-br from-primary/5 to-transparent transition-all duration-500 ${
+          aiGenerating ? "ring-2 ring-primary/30 shadow-lg scale-[1.02]" : ""
+        }`}
+      >
         <CardHeader>
           <CardTitle className="text-lg font-semibold flex items-center gap-3">
-            <Sparkles className="h-5 w-5 text-primary" />
-            AI Invoice Generator
+            <div className="relative">
+              <Sparkles
+                className={`h-5 w-5 text-primary transition-all duration-300 ${
+                  aiGenerating ? "animate-pulse" : ""
+                }`}
+              />
+              {aiGenerating && (
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full animate-ping" />
+              )}
+            </div>
+            <span className={aiGenerating ? "animate-pulse" : ""}>
+              AI Invoice Generator
+            </span>
+            {aiGenerating && (
+              <div className="flex items-center gap-1 ml-auto">
+                <div
+                  className="w-2 h-2 bg-primary rounded-full animate-bounce"
+                  style={{ animationDelay: "0ms" }}
+                />
+                <div
+                  className="w-2 h-2 bg-primary rounded-full animate-bounce"
+                  style={{ animationDelay: "150ms" }}
+                />
+                <div
+                  className="w-2 h-2 bg-primary rounded-full animate-bounce"
+                  style={{ animationDelay: "300ms" }}
+                />
+              </div>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="aiPrompt">Describe your invoice</Label>
-            <Textarea
-              id="aiPrompt"
-              value={aiPrompt}
-              onChange={(e) => setAiPrompt(e.target.value)}
-              placeholder="Example: Create an invoice for web design services for Acme Corp. 3 pages at $500 each, logo design for $300, 10% tax, due in 30 days. Client is John Smith at john@acme.com, 123 Business St, New York..."
-              className="min-h-[100px]"
-            />
+            <Label htmlFor="aiPrompt" className="flex items-center gap-2">
+              Describe your invoice
+              {aiGenerating && (
+                <span className="text-xs text-primary font-medium animate-pulse">
+                  AI is analyzing...
+                </span>
+              )}
+            </Label>
+            <div className="relative">
+              <Textarea
+                id="aiPrompt"
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="Example: Create an invoice for web design services for Acme Corp. 3 pages at $500 each, logo design for $300, 10% tax, due in 30 days. Client is John Smith at john@acme.com, 123 Business St, New York..."
+                className={`min-h-[100px] transition-all duration-300 ${
+                  aiGenerating ? "ring-2 ring-primary/20 bg-primary/5" : ""
+                }`}
+                disabled={aiGenerating}
+              />
+              {aiGenerating && (
+                <div className="absolute top-2 right-2">
+                  <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                </div>
+              )}
+            </div>
           </div>
+
           <Button
             onClick={handleAIGenerate}
             disabled={!aiPrompt.trim() || aiGenerating}
-            className="w-full bg-primary-gradient hover:opacity-90 transition-opacity"
+            className={`w-full transition-all duration-300 ${
+              aiGenerating
+                ? "bg-primary/80 cursor-not-allowed"
+                : "bg-primary-gradient hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
+            }`}
           >
             {aiGenerating ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-background border-t-transparent mr-2" />
-                Generating with AI...
-              </>
+              <div className="flex items-center justify-center gap-2">
+                <div className="relative">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-background border-t-transparent" />
+                  <div className="absolute inset-0 animate-ping rounded-full h-4 w-4 border border-primary/30" />
+                </div>
+                <span className="animate-pulse">AI is working...</span>
+              </div>
             ) : (
-              <>
-                <Sparkles className="h-4 w-4 mr-2" />
-                Generate Invoice with AI
-              </>
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4" />
+                <span>Generate Invoice with AI</span>
+              </div>
             )}
           </Button>
-          <div className="text-xs text-muted-foreground">
+
+          {aiGenerating && (
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 animate-fadeIn">
+              <div className="flex items-center gap-2 text-sm text-primary">
+                <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                <span className="font-medium">
+                  AI is processing your request...
+                </span>
+              </div>
+              <div className="mt-2 text-xs text-primary/70">
+                This may take a few moments while we generate your professional
+                invoice.
+              </div>
+            </div>
+          )}
+
+          <div
+            className={`text-xs text-muted-foreground transition-opacity duration-300 ${
+              aiGenerating ? "opacity-50" : "opacity-100"
+            }`}
+          >
             <p className="font-medium mb-1">💡 Tips for better results:</p>
             <ul className="space-y-1 ml-4">
               <li>• Mention client name and your business details</li>
