@@ -60,7 +60,7 @@ const Landing = () => {
       name: "Sarah Johnson",
       role: "Freelance Designer",
       content:
-        "Invoice Pro has transformed how I manage my business. Creating professional invoices has never been easier!",
+        "Simple Invoicing has transformed how I manage my business. Creating professional invoices has never been easier!",
       rating: 5,
     },
     {
@@ -90,7 +90,7 @@ const Landing = () => {
                 <FileText className="h-5 w-5 text-white" />
               </div>
               <span className="text-xl font-bold text-foreground">
-                Invoice Pro
+                Simple Invoicing
               </span>
             </div>
             <div className="flex items-center gap-4">
@@ -207,7 +207,7 @@ const Landing = () => {
               What our customers say
             </h2>
             <p className="text-xl text-muted-foreground">
-              Join thousands of satisfied users who trust Invoice Pro
+              Join thousands of satisfied users who trust Simple Invoicing
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -247,8 +247,8 @@ const Landing = () => {
             Ready to streamline your invoicing?
           </h2>
           <p className="text-xl text-muted-foreground mb-8">
-            Join thousands of businesses already using Invoice Pro to manage
-            their invoices.
+            Join thousands of businesses already using Simple Invoicing to
+            manage their invoices.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/signup">
@@ -277,7 +277,7 @@ const Landing = () => {
                   <FileText className="h-5 w-5 text-white" />
                 </div>
                 <span className="text-xl font-bold text-foreground">
-                  Invoice Pro
+                  Simple Invoicing
                 </span>
               </div>
               <p className="text-muted-foreground">
@@ -361,7 +361,7 @@ const Landing = () => {
             </div>
           </div>
           <div className="border-t border-border/50 mt-8 pt-8 text-center text-muted-foreground">
-            <p>&copy; 2024 Invoice Pro. All rights reserved.</p>
+            <p>&copy; 2024 Simple Invoicing. All rights reserved.</p>
           </div>
         </div>
       </footer>

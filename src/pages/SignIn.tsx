@@ -86,7 +86,7 @@ const SignIn = () => {
           <h1 className="text-4xl font-bold text-foreground mb-4">
             Welcome back to
             <span className="bg-primary-gradient bg-clip-text text-transparent block">
-              Invoice Pro
+              Simple Invoicing
             </span>
           </h1>
           <p className="text-xl text-muted-foreground max-w-md">
@@ -113,7 +113,7 @@ const SignIn = () => {
                 <FileText className="h-6 w-6 text-white" />
               </div>
               <span className="text-2xl font-bold text-foreground">
-                Invoice Pro
+                Simple Invoicing
               </span>
             </div>
           </div>

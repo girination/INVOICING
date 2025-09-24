@@ -2,9 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { Bell, User } from "lucide-react";
+import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import ProfileSetupModal from "@/components/ProfileSetupModal";
@@ -85,29 +84,17 @@ export const DashboardLayout = () => {
 
               {/* Header Actions */}
               <div className="flex items-center gap-2">
-                {/* Notifications */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative h-9 w-9"
-                >
-                  <Bell className="h-4 w-4" />
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
-                    3
-                  </Badge>
-                </Button>
-
                 {/* User Profile */}
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9 rounded-full overflow-hidden"
+                  className="h-12 w-auto px-2 rounded-lg overflow-hidden"
                 >
                   {profile?.logo_url ? (
                     <img
                       src={profile.logo_url}
                       alt="Profile Logo"
-                      className="h-full w-full object-cover"
+                      className="h-8 w-auto object-contain"
                     />
                   ) : (
                     <User className="h-4 w-4" />

@@ -66,7 +66,8 @@ export default function Dashboard() {
             .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
             .slice(0, 4)
             .map((invoice) => ({
-              id: invoice.invoice_number,
+              id: invoice.id, // Use database ID for the view link
+              invoiceNumber: invoice.invoice_number, // Display number
               client: invoice.client_name,
               amount: invoice.total,
               currency: invoice.currency,
@@ -259,14 +260,15 @@ export default function Dashboard() {
             ) : (
               <div className="divide-y divide-border/50">
                 {recentInvoices.map((invoice, index) => (
-                  <div
+                  <Link
                     key={invoice.id}
-                    className="p-4 hover:bg-muted/30 transition-colors group"
+                    to={`/app/view-invoice/${invoice.id}`}
+                    className="block p-4 hover:bg-muted/30 transition-colors group cursor-pointer"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         <div className="relative">
-                          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary/10">
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary/10 group-hover:bg-primary/20 transition-colors">
                             <FileText className="h-5 w-5 text-primary" />
                           </div>
                           {invoice.isRecurring && (
@@ -274,8 +276,8 @@ export default function Dashboard() {
                           )}
                         </div>
                         <div>
-                          <p className="font-semibold text-foreground">
-                            {invoice.id}
+                          <p className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                            {invoice.invoiceNumber}
                           </p>
                           <p className="text-sm text-muted-foreground">
                             {invoice.client}
@@ -294,9 +296,15 @@ export default function Dashboard() {
                             Recurring
                           </p>
                         )}
+                        <div className="flex items-center gap-1 mt-1">
+                          <Eye className="h-3 w-3 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">
+                            Click to view
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}

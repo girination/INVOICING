@@ -136,7 +136,7 @@ export function AppSidebar() {
             {state !== "collapsed" && (
               <div className="flex flex-col">
                 <span className="font-bold text-sidebar-foreground text-lg">
-                  Invoice Pro
+                  Simple Invoicing
                 </span>
               </div>
             )}
