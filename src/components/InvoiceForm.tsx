@@ -400,7 +400,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
           >
             <p className="font-medium mb-1">💡 Tips for better results:</p>
             <ul className="space-y-1 ml-4">
-              <li>• Mention client name and your business details</li>
+              <li>• Mention client name</li>
               <li>• Describe services/products with quantities and rates</li>
               <li>• Include tax rates, discounts, and payment terms</li>
               <li>• Specify currency if not USD</li>

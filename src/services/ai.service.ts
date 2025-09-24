@@ -46,6 +46,14 @@ export interface AIInvoiceResponse {
 export class AIService {
   private static openai: OpenAIApi | null = null;
 
+  // Cost-effective model options (cheapest to most expensive):
+  // - gpt-3.5-turbo-1106: Latest 3.5 turbo, most cost-effective (~$0.001/1K tokens)
+  // - gpt-3.5-turbo: Standard 3.5 turbo (~$0.002/1K tokens)
+  // - gpt-4o-mini: Cheapest GPT-4 model (~$0.00015/1K tokens input, ~$0.0006/1K tokens output)
+  // - gpt-4o: Most capable but expensive (~$0.005/1K tokens input, ~$0.015/1K tokens output)
+  private static readonly MODEL =
+    import.meta.env.VITE_OPENAI_MODEL || "gpt-4o-mini";
+
   /**
    * Initialize OpenAI client
    */
@@ -80,32 +88,28 @@ User's description: "${request.prompt}"
 
 Based on this description, generate a complete invoice with the following structure:
 
-1. Business Information (use these if provided, otherwise generate realistic ones):
-   - Business Name: ${
-     request.businessName || "Generate a professional business name"
-   }
-   - Email: ${request.businessEmail || "Generate a professional email"}
-   - Phone: ${request.businessPhone || "Generate a professional phone number"}
-   - Address: ${
-     request.businessAddress || "Generate a professional business address"
-   }
+1. Business Information (use these if provided):
+   - Business Name: ${request.businessName || ""}
+   - Email: ${request.businessEmail || ""}
+   - Phone: ${request.businessPhone || ""}
+   - Address: ${request.businessAddress || ""}
 
-2. Client Information (extract from description or generate realistic):
+2. Client Information (extract from description):
    - Client Name
    - Client Email  
    - Client Address
 
 3. Line Items (extract services/products from description):
-   - Professional descriptions
+   - Generic service descriptions (do NOT include client names in descriptions)
    - Realistic quantities
    - Reasonable rates
    - Calculated amounts
 
 4. Invoice Details:
    - Invoice number (format: INV-YYYY-NNNN)
-   - Issue date (today's date)
-   - Due date (30 days from issue date)
-   - Currency (USD unless specified)
+   - Issue date (extract from description or use today's date)
+   - Due date (extract from description or calculate from issue date)
+   - Currency (extract from description - look for currency codes like USD, EUR, GBP, BWP, etc.)
    - Tax rate (8-15% unless specified)
    - Professional notes
 
@@ -124,39 +128,45 @@ Return the response in this exact JSON format:
   },
   "lineItems": [
     {
-      "description": "Service description",
-      "quantity": 1,
-      "rate": 100,
-      "amount": 100
+      "description": "Consultation Services",
+      "quantity": 3,
+      "rate": 500,
+      "amount": 1500
     }
   ],
   "invoiceDetails": {
     "invoiceNumber": "INV-2024-0001",
     "issueDate": "2024-01-15",
     "dueDate": "2024-02-14", 
-    "currency": "USD",
+    "currency": "BWP",
     "taxRate": 10,
     "notes": "Thank you for your business! Payment is due within 30 days."
   }
 }
 
-Make sure all data is realistic, professional, and appropriate for the described services.`;
+Make sure all data is realistic, professional, and appropriate for the described services.
+
+CRITICAL: Line item descriptions must be generic service names only (e.g., "Consultation Services", "Web Development", "Design Work"). Do NOT include client names, company names, or specific project details in the line item descriptions.
+
+CURRENCY EXTRACTION: Pay special attention to currency codes in the description (BWP, USD, EUR, GBP, etc.) and use the EXACT currency mentioned. Do NOT default to USD if another currency is specified.
+
+EXAMPLE: If user says "BWP 500 per hour", use "BWP" as the currency, not "USD".`;
 
       const completion = await openai.createChatCompletion({
-        model: "gpt-3.5-turbo",
+        model: this.MODEL,
         messages: [
           {
             role: "system",
             content:
-              "You are a professional business consultant who specializes in creating detailed, realistic invoices. Always provide accurate, professional, and industry-appropriate data.",
+              "You are a professional business consultant who specializes in creating detailed, realistic invoices. Always provide accurate, professional, and industry-appropriate data. IMPORTANT: Line item descriptions should be generic service descriptions (e.g., 'Consultation Services', 'Web Development', 'Design Work') and should NEVER include client names or company names in the description. CRITICAL: Always extract and use the exact currency specified in the user's description (e.g., BWP, USD, EUR, GBP, etc.) - do NOT default to USD if another currency is mentioned.",
           },
           {
             role: "user",
             content: prompt,
           },
         ],
-        max_tokens: 2000,
-        temperature: 0.7,
+        max_tokens: 1500, // Reduced for cost savings
+        temperature: 0.3, // Lower temperature for more consistent, cheaper responses
       });
 
       const responseText = completion.data.choices[0]?.message?.content;
@@ -179,12 +189,20 @@ Make sure all data is realistic, professional, and appropriate for the described
 
       // Ensure all line items have required fields and generate IDs
       const validatedLineItems = aiResponse.lineItems.map(
-        (item: any, index: number) => ({
+        (
+          item: {
+            description?: string;
+            quantity?: number;
+            rate?: number;
+            amount?: number;
+          },
+          index: number
+        ) => ({
           id: `ai-generated-${Date.now()}-${index}`,
           description: item.description || "Service",
-          quantity: Math.max(1, parseInt(item.quantity) || 1),
-          rate: Math.max(0, parseFloat(item.rate) || 0),
-          amount: Math.max(0, parseFloat(item.amount) || 0),
+          quantity: Math.max(1, parseInt(String(item.quantity)) || 1),
+          rate: Math.max(0, parseFloat(String(item.rate)) || 0),
+          amount: Math.max(0, parseFloat(String(item.amount)) || 0),
         })
       );
 
@@ -229,8 +247,11 @@ Make sure all data is realistic, professional, and appropriate for the described
         },
         message: "AI invoice generated successfully",
       };
-    } catch (error: any) {
-      ErrorService.logError("AIService.generateInvoiceFromDescription", error);
+    } catch (error: unknown) {
+      ErrorService.logError(
+        "AIService.generateInvoiceFromDescription",
+        error instanceof Error ? error.message : String(error)
+      );
       return {
         success: false,
         message: "Failed to generate AI invoice",
