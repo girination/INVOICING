@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { InvoiceController } from "@/controllers/invoice.controller";
 import { Save } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const CreateInvoice = () => {
   const [showPreview, setShowPreview] = useState(true);
@@ -28,6 +29,7 @@ const CreateInvoice = () => {
   const { profile, profileLoading, refreshProfile } = useProfile(
     user?.id || null
   );
+  const navigate = useNavigate();
 
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
     invoiceNumber: "",
@@ -240,11 +242,11 @@ const CreateInvoice = () => {
     }
   };
 
-  const handleSaveInvoice = async () => {
+  const handleCreateInvoice = async () => {
     if (!user?.id) {
       toast({
         title: "Error",
-        description: "You must be logged in to save invoices.",
+        description: "You must be logged in to create invoices.",
         variant: "destructive",
       });
       return;
@@ -261,8 +263,13 @@ const CreateInvoice = () => {
       if (response.success) {
         toast({
           title: "Success!",
-          description: "Invoice saved successfully.",
+          description: "Invoice created successfully.",
         });
+
+        // Navigate to the view invoice page
+        if (response.data?.id) {
+          navigate(`/app/view-invoice/${response.data.id}`);
+        }
       } else {
         if (response.errors && response.errors.length > 0) {
           const firstError = response.errors[0];
@@ -332,7 +339,7 @@ const CreateInvoice = () => {
           </Button>
 
           <Button
-            onClick={handleSaveInvoice}
+            onClick={handleCreateInvoice}
             disabled={isSaving}
             variant="outline"
             className="hover:bg-green-50 hover:border-green-300 hover:text-green-700"
@@ -340,12 +347,12 @@ const CreateInvoice = () => {
             {isSaving ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent mr-2" />
-                Saving...
+                Creating...
               </>
             ) : (
               <>
                 <Save className="h-4 w-4 mr-2" />
-                Save Invoice
+                Create Invoice
               </>
             )}
           </Button>
