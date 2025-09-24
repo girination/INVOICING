@@ -77,9 +77,10 @@ const CURRENCIES = [
 
 export default function Profile() {
   const { user } = useAuth();
-  const { refreshProfile } = useProfile(user?.id || null);
+  const { profile, profileLoading, refreshProfile } = useProfile(
+    user?.id || null
+  );
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [profileData, setProfileData] = useState({
     // Business Information
@@ -102,50 +103,31 @@ export default function Profile() {
     iban: "",
   });
 
-  // Load profile data on component mount
+  // Update profile data when profile from hook changes
   useEffect(() => {
-    const loadProfile = async () => {
-      if (!user?.id) return;
+    if (profile) {
+      setProfileData({
+        businessName: profile.business_name || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+        website: profile.website || "",
+        address: profile.address || "",
+        logoUrl: profile.logo_url || "",
+        defaultCurrency: profile.default_currency || "USD",
+        defaultTaxRate: profile.default_tax_rate || 10,
+        invoicePrefix: profile.invoice_prefix || "INV",
+        bankName: profile.bank_name || "",
+        accountNumber: profile.account_number || "",
+        swiftCode: profile.swift_code || "",
+        iban: profile.iban || "",
+      });
 
-      setIsLoading(true);
-      try {
-        const response = await ProfileController.getProfile(user.id);
-        if (response.success && response.data) {
-          setProfileData({
-            businessName: response.data.business_name || "",
-            email: response.data.email || "",
-            phone: response.data.phone || "",
-            website: response.data.website || "",
-            address: response.data.address || "",
-            logoUrl: response.data.logo_url || "",
-            defaultCurrency: response.data.default_currency || "USD",
-            defaultTaxRate: response.data.default_tax_rate || 10,
-            invoicePrefix: response.data.invoice_prefix || "INV",
-            bankName: response.data.bank_name || "",
-            accountNumber: response.data.account_number || "",
-            swiftCode: response.data.swift_code || "",
-            iban: response.data.iban || "",
-          });
-
-          // Set logo preview if logo exists
-          if (response.data.logo_url) {
-            setLogoPreview(response.data.logo_url);
-          }
-        }
-      } catch (error) {
-        console.error("Error loading profile:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load profile data",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
+      // Set logo preview if logo exists
+      if (profile.logo_url) {
+        setLogoPreview(profile.logo_url);
       }
-    };
-
-    loadProfile();
-  }, [user?.id]);
+    }
+  }, [profile]);
 
   const handleLogoUpload = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -263,7 +245,7 @@ export default function Profile() {
   };
 
   // Show loading state while profile is being loaded
-  if (isLoading) {
+  if (profileLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex items-center space-x-2">
