@@ -27,7 +27,6 @@ import {
 import {
   Search,
   Eye,
-  Download,
   Edit,
   Trash2,
   Plus,
@@ -130,14 +129,6 @@ export default function Invoices() {
       description: "Invoice has been deleted successfully.",
       variant: "destructive",
     });
-  };
-
-  const handleDownloadInvoice = (invoice: Invoice) => {
-    toast({
-      title: "Download Started",
-      description: `Downloading ${invoice.invoice_number}...`,
-    });
-    // In a real app, this would trigger the actual PDF download
   };
 
   const totalAmount = filteredInvoices.reduce(
@@ -331,12 +322,6 @@ export default function Invoices() {
                             >
                               <Eye className="h-4 w-4 mr-2" />
                               View
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDownloadInvoice(invoice)}
-                            >
-                              <Download className="h-4 w-4 mr-2" />
-                              Download
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() =>
