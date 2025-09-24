@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,50 +9,87 @@ import {
   Eye,
   User,
   Layout,
+  Loader2,
+  Sparkles,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { InvoiceController } from "@/controllers/invoice.controller";
+import { ClientController } from "@/controllers/client.controller";
+import { toast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
-  // Mock data - in a real app, this would come from your backend
-  const stats = {
-    totalInvoices: 24,
-    totalClients: 8,
-    growth: {
-      invoices: 12,
-      clients: 25,
-    },
-  };
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalInvoices: 0,
+    recurringInvoices: 0,
+    oneTimeInvoices: 0,
+    totalClients: 0,
+  });
+  const [recentInvoices, setRecentInvoices] = useState([]);
 
-  const recentInvoices = [
-    {
-      id: "INV-001",
-      client: "Acme Corp",
-      amount: 1500,
-      date: "2024-01-15",
-      trend: "up",
-    },
-    {
-      id: "INV-002",
-      client: "Tech Solutions",
-      amount: 2300,
-      date: "2024-01-12",
-      trend: "up",
-    },
-    {
-      id: "INV-003",
-      client: "Design Studio",
-      amount: 850,
-      date: "2024-01-08",
-      trend: "down",
-    },
-    {
-      id: "INV-004",
-      client: "StartupXYZ",
-      amount: 3200,
-      date: "2024-01-10",
-      trend: "up",
-    },
-  ];
+  // Load dashboard data
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      if (!user?.id) return;
+
+      setIsLoading(true);
+      try {
+        // Load invoices and clients in parallel
+        const [invoicesResponse, clientsResponse] = await Promise.all([
+          InvoiceController.getInvoices(user.id),
+          ClientController.getClients(user.id),
+        ]);
+
+        if (invoicesResponse.success && clientsResponse.success) {
+          const invoices = invoicesResponse.data || [];
+          const clients = clientsResponse.data || [];
+
+          // Calculate stats
+          const recurringCount = invoices.filter(
+            (inv) => inv.is_recurring
+          ).length;
+          const oneTimeCount = invoices.filter(
+            (inv) => !inv.is_recurring
+          ).length;
+
+          setStats({
+            totalInvoices: invoices.length,
+            recurringInvoices: recurringCount,
+            oneTimeInvoices: oneTimeCount,
+            totalClients: clients.length,
+          });
+
+          // Get recent invoices (last 4)
+          const recent = invoices
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+            .slice(0, 4)
+            .map((invoice) => ({
+              id: invoice.invoice_number,
+              client: invoice.client_name,
+              amount: invoice.total,
+              currency: invoice.currency,
+              date: new Date(invoice.issue_date).toLocaleDateString(),
+              isRecurring: invoice.is_recurring,
+            }));
+
+          setRecentInvoices(recent);
+        }
+      } catch (error) {
+        console.error("Error loading dashboard data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load dashboard data",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadDashboardData();
+  }, [user?.id]);
 
   return (
     <div className="space-y-8 max-w-7xl">
@@ -78,7 +115,7 @@ export default function Dashboard() {
       </div>
 
       {/* Premium Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="bg-card-gradient shadow-medium hover:shadow-large transition-all duration-300 border-0 animate-scale-in">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -90,23 +127,73 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-foreground">
-              {stats.totalInvoices}
+              {isLoading ? (
+                <Loader2 className="h-8 w-8 animate-spin" />
+              ) : (
+                stats.totalInvoices
+              )}
             </div>
-            <div className="flex items-center gap-2 mt-2">
-              <TrendingUp className="h-3 w-3 text-success" />
-              <span className="text-sm font-medium text-success">
-                +{stats.growth.invoices}%
-              </span>
-              <span className="text-xs text-muted-foreground">
-                from last month
-              </span>
-            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              All invoices created
+            </p>
           </CardContent>
         </Card>
 
         <Card
           className="bg-card-gradient shadow-medium hover:shadow-large transition-all duration-300 border-0 animate-scale-in"
           style={{ animationDelay: "0.1s" }}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Recurring Invoices
+            </CardTitle>
+            <div className="p-2 bg-blue-500/10 rounded-lg">
+              <TrendingUp className="h-5 w-5 text-blue-500" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-foreground">
+              {isLoading ? (
+                <Loader2 className="h-8 w-8 animate-spin" />
+              ) : (
+                stats.recurringInvoices
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Automated billing
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card
+          className="bg-card-gradient shadow-medium hover:shadow-large transition-all duration-300 border-0 animate-scale-in"
+          style={{ animationDelay: "0.2s" }}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              One-time Invoices
+            </CardTitle>
+            <div className="p-2 bg-purple-500/10 rounded-lg">
+              <FileText className="h-5 w-5 text-purple-500" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-foreground">
+              {isLoading ? (
+                <Loader2 className="h-8 w-8 animate-spin" />
+              ) : (
+                stats.oneTimeInvoices
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Single transactions
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card
+          className="bg-card-gradient shadow-medium hover:shadow-large transition-all duration-300 border-0 animate-scale-in"
+          style={{ animationDelay: "0.3s" }}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -118,17 +205,13 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-foreground">
-              {stats.totalClients}
+              {isLoading ? (
+                <Loader2 className="h-8 w-8 animate-spin" />
+              ) : (
+                stats.totalClients
+              )}
             </div>
-            <div className="flex items-center gap-2 mt-2">
-              <TrendingUp className="h-3 w-3 text-success" />
-              <span className="text-sm font-medium text-success">
-                +{stats.growth.clients}%
-              </span>
-              <span className="text-xs text-muted-foreground">
-                from last month
-              </span>
-            </div>
+            <p className="text-xs text-muted-foreground mt-2">Total clients</p>
           </CardContent>
         </Card>
       </div>
@@ -158,43 +241,65 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="divide-y divide-border/50">
-              {recentInvoices.map((invoice, index) => (
-                <div
-                  key={invoice.id}
-                  className="p-4 hover:bg-muted/30 transition-colors group"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="relative">
-                        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary/10">
-                          <FileText className="h-5 w-5 text-primary" />
+            {isLoading ? (
+              <div className="p-8 text-center">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+                <p className="text-muted-foreground">
+                  Loading recent invoices...
+                </p>
+              </div>
+            ) : recentInvoices.length === 0 ? (
+              <div className="p-8 text-center">
+                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground mb-2">No invoices yet</p>
+                <p className="text-sm text-muted-foreground">
+                  Create your first invoice to get started
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-border/50">
+                {recentInvoices.map((invoice, index) => (
+                  <div
+                    key={invoice.id}
+                    className="p-4 hover:bg-muted/30 transition-colors group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="relative">
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary/10">
+                            <FileText className="h-5 w-5 text-primary" />
+                          </div>
+                          {invoice.isRecurring && (
+                            <TrendingUp className="w-3 h-3 text-blue-500 absolute -top-1 -right-1 bg-background rounded-full" />
+                          )}
                         </div>
-                        {invoice.trend === "up" && (
-                          <TrendingUp className="w-3 h-3 text-success absolute -top-1 -right-1 bg-background rounded-full" />
+                        <div>
+                          <p className="font-semibold text-foreground">
+                            {invoice.id}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {invoice.client}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {invoice.date}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-lg">
+                          {invoice.currency} {invoice.amount.toLocaleString()}
+                        </p>
+                        {invoice.isRecurring && (
+                          <p className="text-xs text-blue-500 font-medium">
+                            Recurring
+                          </p>
                         )}
                       </div>
-                      <div>
-                        <p className="font-semibold text-foreground">
-                          {invoice.id}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {invoice.client}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {invoice.date}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-lg">
-                        ${invoice.amount.toLocaleString()}
-                      </p>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -260,21 +365,25 @@ export default function Dashboard() {
             <div className="mt-6 p-4 bg-primary/5 border border-primary/20 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-6 h-6 bg-primary-gradient rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">AI</span>
+                  <Sparkles className="h-4 w-4 text-white" />
                 </div>
                 <span className="font-semibold text-foreground">
-                  AI Features
+                  AI Invoice Generator
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mb-3">
-                Generate invoices automatically with AI assistance
+                Describe your invoice and let AI generate the details
+                automatically
               </p>
-              <Button
-                size="sm"
-                className="w-full bg-primary-gradient hover:shadow-md transition-shadow"
-              >
-                Try AI Generation
-              </Button>
+              <Link to="/app/create-invoice">
+                <Button
+                  size="sm"
+                  className="w-full bg-primary-gradient hover:shadow-md transition-shadow"
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Try AI Generation
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>

@@ -131,11 +131,6 @@ export default function Invoices() {
     });
   };
 
-  const totalAmount = filteredInvoices.reduce(
-    (sum, invoice) => sum + invoice.total,
-    0
-  );
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -178,14 +173,6 @@ export default function Invoices() {
             <p className="text-sm text-muted-foreground">One-time</p>
           </CardContent>
         </Card>
-        <Card className="shadow-soft">
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-green-600">
-              {totalAmount.toLocaleString()}
-            </div>
-            <p className="text-sm text-muted-foreground">Total Value</p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Search and Filters */}
@@ -223,12 +210,7 @@ export default function Invoices() {
       {/* Invoices Table */}
       <Card className="shadow-soft">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Invoice List ({filteredInvoices.length})</span>
-            <span className="text-sm font-normal text-muted-foreground">
-              Total: ${totalAmount.toLocaleString()}
-            </span>
-          </CardTitle>
+          <CardTitle>Invoice List ({filteredInvoices.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
