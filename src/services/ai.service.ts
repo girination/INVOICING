@@ -1,4 +1,4 @@
-import { Configuration, OpenAIApi } from "openai";
+import OpenAI from "openai";
 import { ErrorService } from "./error.service";
 
 export interface AIInvoiceRequest {
@@ -36,6 +36,7 @@ export interface AIInvoiceResponse {
       dueDate: string;
       currency: string;
       taxRate: number;
+      discountRate: number;
       notes: string;
     };
   };
@@ -44,7 +45,7 @@ export interface AIInvoiceResponse {
 }
 
 export class AIService {
-  private static openai: OpenAIApi | null = null;
+  private static openai: OpenAI | null = null;
 
   // Cost-effective model options (cheapest to most expensive):
   // - gpt-3.5-turbo-1106: Latest 3.5 turbo, most cost-effective (~$0.001/1K tokens)
@@ -57,7 +58,7 @@ export class AIService {
   /**
    * Initialize OpenAI client
    */
-  private static getOpenAIClient(): OpenAIApi {
+  private static getOpenAIClient(): OpenAI {
     if (!this.openai) {
       const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
       if (!apiKey) {
@@ -65,10 +66,10 @@ export class AIService {
           "OpenAI API key not found. Please set VITE_OPENAI_API_KEY in your environment variables."
         );
       }
-      const configuration = new Configuration({
+      this.openai = new OpenAI({
         apiKey: apiKey,
+        dangerouslyAllowBrowser: true,
       });
-      this.openai = new OpenAIApi(configuration);
     }
     return this.openai;
   }
@@ -110,7 +111,8 @@ Based on this description, generate a complete invoice with the following struct
    - Issue date (extract from description or use today's date)
    - Due date (extract from description or calculate from issue date)
    - Currency (extract from description - look for currency codes like USD, EUR, GBP, BWP, etc.)
-   - Tax rate (8-15% unless specified)
+   - Tax rate (extract from description or use 8-15% if not specified)
+   - Discount rate (IMPORTANT: Look for phrases like "discount of X%", "X% discount", "give a discount of X%" - extract the percentage and use it)
    - Professional notes
 
 Return the response in this exact JSON format:
@@ -140,6 +142,7 @@ Return the response in this exact JSON format:
     "dueDate": "2024-02-14", 
     "currency": "BWP",
     "taxRate": 10,
+    "discountRate": 5,
     "notes": "Thank you for your business! Payment is due within 30 days."
   }
 }
@@ -150,15 +153,18 @@ CRITICAL: Line item descriptions must be generic service names only (e.g., "Cons
 
 CURRENCY EXTRACTION: Pay special attention to currency codes in the description (BWP, USD, EUR, GBP, etc.) and use the EXACT currency mentioned. Do NOT default to USD if another currency is specified.
 
-EXAMPLE: If user says "BWP 500 per hour", use "BWP" as the currency, not "USD".`;
+DISCOUNT EXTRACTION: Look for discount percentages in phrases like "discount of 5%", "5% discount", "give a discount of 5%", etc. and set the discountRate field to the extracted percentage.
 
-      const completion = await openai.createChatCompletion({
+EXAMPLE: If user says "BWP 500 per hour", use "BWP" as the currency, not "USD".
+EXAMPLE: If user says "give a discount of 5%", set discountRate to 5.`;
+
+      const completion = await openai.chat.completions.create({
         model: this.MODEL,
         messages: [
           {
             role: "system",
             content:
-              "You are a professional business consultant who specializes in creating detailed, realistic invoices. Always provide accurate, professional, and industry-appropriate data. IMPORTANT: Line item descriptions should be generic service descriptions (e.g., 'Consultation Services', 'Web Development', 'Design Work') and should NEVER include client names or company names in the description. CRITICAL: Always extract and use the exact currency specified in the user's description (e.g., BWP, USD, EUR, GBP, etc.) - do NOT default to USD if another currency is mentioned.",
+              "You are a professional business consultant who specializes in creating detailed, realistic invoices. Always provide accurate, professional, and industry-appropriate data. IMPORTANT: Line item descriptions should be generic service descriptions (e.g., 'Consultation Services', 'Web Development', 'Design Work') and should NEVER include client names or company names in the description. CRITICAL: Always extract and use the exact currency specified in the user's description (e.g., BWP, USD, EUR, GBP, etc.) - do NOT default to USD if another currency is mentioned. DISCOUNT EXTRACTION: Pay special attention to discount percentages mentioned in the user's description (e.g., 'discount of 5%', '5% discount', 'give a discount of 5%') and ALWAYS include the discountRate field with the extracted percentage.",
           },
           {
             role: "user",
@@ -169,13 +175,20 @@ EXAMPLE: If user says "BWP 500 per hour", use "BWP" as the currency, not "USD".`
         temperature: 0.3, // Lower temperature for more consistent, cheaper responses
       });
 
-      const responseText = completion.data.choices[0]?.message?.content;
+      const responseText = completion.choices[0]?.message?.content;
       if (!responseText) {
         throw new Error("No response from OpenAI");
       }
 
+      // Extract JSON from markdown code blocks if present
+      let jsonText = responseText;
+      const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      if (jsonMatch) {
+        jsonText = jsonMatch[1];
+      }
+
       // Parse the JSON response
-      const aiResponse = JSON.parse(responseText);
+      const aiResponse = JSON.parse(jsonText);
 
       // Validate the response structure
       if (
@@ -240,6 +253,13 @@ EXAMPLE: If user says "BWP 500 per hour", use "BWP" as the currency, not "USD".`
             taxRate: Math.max(
               0,
               Math.min(50, parseFloat(aiResponse.invoiceDetails.taxRate) || 10)
+            ),
+            discountRate: Math.max(
+              0,
+              Math.min(
+                100,
+                parseFloat(aiResponse.invoiceDetails.discountRate) || 0
+              )
             ),
             notes:
               aiResponse.invoiceDetails.notes || "Thank you for your business!",

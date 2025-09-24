@@ -253,6 +253,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
           dueDate: response.data.invoiceDetails.dueDate,
           currency: response.data.invoiceDetails.currency,
           taxRate: response.data.invoiceDetails.taxRate,
+          discountRate: response.data.invoiceDetails.discountRate,
           notes: response.data.invoiceDetails.notes,
         };
 
