@@ -162,3 +162,112 @@ src/
 ├── utils/              # Utility functions
 └── lib/                # External library configurations
 ```
+
+### Database Setup
+
+The project includes two SQL files for database setup:
+
+1. **`supabase/fresh_seed.sql`** - Database schema only (production-ready)
+2. **`supabase/sample_data_seed.sql`** - Complete setup with schema + sample data (demo-ready)
+
+#### Option 1: Quick Demo Setup (Recommended for Testing)
+
+**Perfect for seeing the app in action immediately:**
+
+1. **Go to Supabase Dashboard**:
+
+   - Navigate to [Supabase Dashboard](https://supabase.com/dashboard)
+   - Select your project
+   - Go to **SQL Editor**
+
+2. **Run the complete setup**:
+
+   - Copy and paste the contents of `supabase/sample_data_seed.sql`
+   - Execute the script
+   - **This creates the schema AND sample data in one go**
+
+3. **Create test users** (if needed):
+
+   - Go to Authentication → Users
+   - Create users or use existing ones
+   - Get user IDs: `SELECT id, email FROM auth.users;`
+   - Update the sample data file with real user IDs
+
+4. **What you get**:
+   - ✅ Complete database schema with RLS
+   - ✅ Sample user profiles with business info
+   - ✅ Sample clients and invoices
+   - ✅ Multiple templates and currencies
+   - ✅ Ready to test all app features
+
+#### Option 2: Production Setup (Clean Start)
+
+**For production or when you want to start fresh:**
+
+1. **Run schema only**:
+
+   - Copy and paste the contents of `supabase/fresh_seed.sql`
+   - Execute the script
+   - **This creates only the database structure**
+
+2. **What the schema creates**:
+
+   - ✅ `user_profiles` table with RLS policies
+   - ✅ `clients` table with RLS policies
+   - ✅ `invoices` table with RLS policies
+   - ✅ `invoice_items` table with RLS policies
+   - ✅ Performance indexes and triggers
+   - ✅ Complete Row Level Security
+
+3. **Add your own data**:
+   - Create users through the app
+   - Add your business information
+   - Create your own clients and invoices
+
+#### Sample Data Overview
+
+| Component          | Count | Description                                     |
+| ------------------ | ----- | ----------------------------------------------- |
+| **User Profiles**  | 3     | Complete business profiles with banking details |
+| **Clients**        | 8     | Diverse client database across different users  |
+| **Invoices**       | 5     | Mix of one-time and recurring invoices          |
+| **Templates**      | 5     | Modern, corporate, creative, classic, minimal   |
+| **Currencies**     | 2     | USD and GBP examples                            |
+| **Business Types** | 4     | Tech, design, consulting, international         |
+
+#### Important Notes
+
+⚠️ **Before running the seed file**:
+
+1. **Create users in Supabase Auth** - The seed file references specific user IDs
+2. **Update user IDs** - Replace placeholder UUIDs with actual user IDs from your auth.users table
+3. **Verify logo URLs** - Update logo URLs to point to actual image files
+4. **Test in development** - Don't run seed data in production
+
+#### Getting Real User IDs
+
+To get actual user IDs for the seed file:
+
+```sql
+SELECT id, email FROM auth.users;
+```
+
+Then update the seed file with real user IDs before running it.
+
+#### Customizing Sample Data
+
+You can modify `supabase/sample_data_seed.sql` to:
+
+- Add your own business information
+- Include your actual clients
+- Create invoices with your branding
+- Test different scenarios and edge cases
+
+#### Production Setup
+
+For production environments:
+
+1. **Run only the schema setup** (`supabase/fresh_seed.sql`)
+2. **Skip the sample data** - Use real user data instead
+3. **Verify RLS policies** - Ensure all security policies are active
+4. **Test with real users** - Create actual user accounts
