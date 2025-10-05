@@ -406,7 +406,7 @@ export class ProfileController {
     if (!ibanPattern.test(iban)) {
       return {
         isValid: false,
-        message: "Please enter a valid IBAN",
+        message: "Please enter a valid IBAN",a
       };
     }
 
